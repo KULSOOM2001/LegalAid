@@ -100,13 +100,3 @@ legalaid-frontend/   React + Vite + Tailwind, role-based routing, Socket.io clie
 See each folder's own structure for the module breakdown — it mirrors the design
 doc's backend/frontend folder structures exactly (Section 3 & 4 of the spec).
 
-## 7. Notes on scope / where to extend for extra marks
-
-- OCR/text-extraction for uploaded documents isn't wired up (Feature 2 currently
-  summarises from filename + mimetype, noted clearly in code comments) —
-  swapping in a PDF text extractor before the AI call is a good "extra polish" addition.
-- Appointment reminders (`appointment:reminder` at 24h/1h) are implemented as a
-  gateway method (`notifyAppointmentReminder`) but need a cron/scheduler to fire
-  them automatically — add `@nestjs/schedule` if you want that for full marks.
-- Migrations folder is present but empty since `synchronize: true` is used for
-  speed; switch to real TypeORM migrations if your rubric wants that shown.
