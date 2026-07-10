@@ -74,7 +74,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                         Frontend                           │
+│                         Frontend                            │
 │              React + Vite + Tailwind CSS                    │
 │                    (Role-Based Routing)                     │
 ├─────────────────────────────────────────────────────────────┤
@@ -82,17 +82,17 @@
 │                  (Real-time Notifications)                  │
 ├─────────────────────────────────────────────────────────────┤
 │                    REST API (NestJS)                        │
-│          ┌─────────────────────────────────┐               │
-│          │   Auth Module   │  JWT Guard   │               │
-│          ├─────────────────┼──────────────┤               │
-│          │   Cases Module  │ Audit Trail │               │
-│          ├─────────────────┼──────────────┤               │
-│          │   Documents     │   Notes     │               │
-│          ├─────────────────┼──────────────┤               │
-│          │  Appointments   │  Reports    │               │
-│          ├─────────────────┼──────────────┤               │
-│          │   AI Proxy      │  Users      │               │
-│          └─────────────────────────────────┘               │
+│          ┌─────────────────────────────────┐                │
+│          │   Auth Module   │  JWT Guard   │                 │
+│          ├─────────────────┼──────────────┤                 │
+│          │   Cases Module  │ Audit Trail │                  │
+│          ├─────────────────┼──────────────┤                 │
+│          │   Documents     │   Notes     │                  │
+│          ├─────────────────┼──────────────┤                 │
+│          │  Appointments   │  Reports    │                  │
+│          ├─────────────────┼──────────────┤                 │
+│          │   AI Proxy      │  Users      │                  │
+│          └─────────────────────────────────┘                │
 ├─────────────────────────────────────────────────────────────┤
 │              PostgreSQL (Neon.tech Serverless)              │
 │                      8 Core Entities                        │
@@ -252,7 +252,7 @@ Total Users: 6
 
 ```
 📊 System Activity Overview
-─────────────────────────────────────────────────────────────
+───────────────────────────────────────────────────────────
 │ Role           │ Active │ Pending │ Completed │ Success │
 ├────────────────┼────────┼─────────┼───────────┼─────────┤
 │ Admin          │  100%  │   0%    │   100%    │   99%   │
@@ -339,7 +339,7 @@ try {
 ```sql
 ┌──────────────────────────────────────────────────────┐
 │                     User                             │
-│  id, email, role, password_hash, created_at         │
+│  id, email, role, password_hash, created_at          │
 └──────────────────────────────────────────────────────┘
          │
          ├─────────────────┬─────────────────┐
@@ -701,10 +701,7 @@ git push origin feature/amazing-feature
 
 **[⬆ Back to Top](#legalaid--ai-powered-legal-case-management-system)**
 
-**Made with ❤️ by Team LegalAid**
-
 [![Star on GitHub](https://img.shields.io/github/stars/yourusername/legalaid?style=social)](https://github.com/yourusername/legalaid)
-[![Follow on Twitter](https://img.shields.io/twitter/follow/legalaid?style=social)](https://twitter.com/legalaid)
 
 </div>
 
