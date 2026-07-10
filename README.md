@@ -672,31 +672,6 @@ legalaid/
 
 ---
 
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md).
-
-### **Development Workflow**
-
-```bash
-# 1. Fork the repository
-# 2. Create your feature branch
-git checkout -b feature/amazing-feature
-
-# 3. Install dependencies
-npm install
-
-# 4. Run tests
-npm run test
-
-# 5. Commit your changes
-git commit -m 'Add amazing feature'
-
-# 6. Push to the branch
-git push origin feature/amazing-feature
-
-# 7. Open a Pull Request
-
 <div align="center">
 
 **[⬆ Back to Top](#legalaid--ai-powered-legal-case-management-system)**
