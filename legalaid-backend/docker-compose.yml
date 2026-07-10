@@ -1,0 +1,53 @@
+# Two ways to run this project with Docker:
+#
+# 1) LOCAL POSTGRES (this file, default) — spins up Postgres + backend together
+#    with a single command, no Neon account needed:
+#      docker compose up
+#
+# 2) NEON (managed Postgres) — if you'd rather use your Neon database instead
+#    of the local container, just don't set DATABASE_URL below (or override it)
+#    and point DATABASE_URL in your .env at your Neon connection string, then
+#    run only the api service: docker compose up api
+#
+version: "3.8"
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: legalaid
+      POSTGRES_PASSWORD: legalaid_dev_password
+      POSTGRES_DB: legalaid
+    ports:
+      - "5432:5432"
+    volumes:
+      - legalaid_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U legalaid"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://legalaid:legalaid_dev_password@db:5432/legalaid?sslmode=disable
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-change_this_access_secret}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-change_this_refresh_secret}
+      JWT_ACCESS_EXPIRES: 15m
+      JWT_REFRESH_EXPIRES: 7d
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-sk-ant-your-key-here}
+      AI_MODEL: claude-sonnet-4-6
+      PORT: 3000
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
+    volumes:
+      - ./uploads:/app/uploads
+
+volumes:
+  legalaid_db_data:
