@@ -5,12 +5,14 @@ import { Appointment, AppointmentStatus } from './entities/appointment.entity';
 import { Availability } from './entities/availability.entity';
 import { UserRole } from '../users/entities/user.entity';
 import { CreateAppointmentDto, UpdateAppointmentDto, CreateAvailabilityDto } from './dto/appointment.dto';
+import { NotificationsGateway } from '../notifications/notifications.gateway';
 
 @Injectable()
 export class AppointmentsService {
   constructor(
     @InjectRepository(Appointment) private apptRepo: Repository<Appointment>,
     @InjectRepository(Availability) private availRepo: Repository<Availability>,
+    private notificationsGateway: NotificationsGateway, 
   ) {}
 
   async setAvailability(volunteerId: string, dto: CreateAvailabilityDto) {
@@ -66,18 +68,21 @@ export class AppointmentsService {
       endsAt: end,
       status: AppointmentStatus.REQUESTED,
     });
-    return this.apptRepo.save(appt);
+   const saved = await this.apptRepo.save(appt);
+   await this.notificationsGateway.notifyAppointmentRequested(saved);
+   return saved;
   }
 
   async findForUser(user: { userId: string; role: UserRole }) {
-    if (user.role === UserRole.CITIZEN) {
-      return this.apptRepo.find({ where: { citizenId: user.userId }, order: { startsAt: 'ASC' } });
-    }
-    if (user.role === UserRole.VOLUNTEER) {
-      return this.apptRepo.find({ where: { volunteerId: user.userId }, order: { startsAt: 'ASC' } });
-    }
-    return this.apptRepo.find({ order: { startsAt: 'ASC' } });
+  const relations = ['citizen', 'volunteer', 'case'];
+  if (user.role === UserRole.CITIZEN) {
+    return this.apptRepo.find({ where: { citizenId: user.userId }, relations, order: { startsAt: 'ASC' } });
   }
+  if (user.role === UserRole.VOLUNTEER) {
+    return this.apptRepo.find({ where: { volunteerId: user.userId }, relations, order: { startsAt: 'ASC' } });
+  }
+  return this.apptRepo.find({ relations, order: { startsAt: 'ASC' } });
+}
 
   async update(id: string, dto: UpdateAppointmentDto, user: { userId: string; role: UserRole }) {
     const appt = await this.apptRepo.findOne({ where: { id } });
@@ -94,6 +99,8 @@ export class AppointmentsService {
       appt.endsAt = new Date(dto.endsAt);
       appt.status = AppointmentStatus.RESCHEDULED;
     }
-    return this.apptRepo.save(appt);
+    const saved = await this.apptRepo.save(appt);
+    await this.notificationsGateway.notifyAppointmentStatusChanged(saved);
+    return saved;
   }
 }

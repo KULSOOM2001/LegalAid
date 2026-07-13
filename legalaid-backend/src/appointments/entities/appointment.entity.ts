@@ -43,10 +43,10 @@ export class Appointment {
   @JoinColumn({ name: 'volunteerId' })
   volunteer: User;
 
-  @Column({ type: 'timestamp' })
+  @Column({ type: 'timestamptz' })
   startsAt: Date;
 
-  @Column({ type: 'timestamp' })
+  @Column({ type: 'timestamptz' })
   endsAt: Date;
 
   @Column({ type: 'enum', enum: AppointmentStatus, default: AppointmentStatus.REQUESTED })
@@ -58,6 +58,6 @@ export class Appointment {
   @Column({ default: false })
   reminder1hSent: boolean;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 }

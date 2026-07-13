@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { casesApi, documentsApi, notesApi } from '../../api/cases';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { casesApi, notesApi } from '../../api/cases';
 import { useAuth } from '../../context/AuthContext';
 import type { Case, CaseStatus } from '../../types';
 import { StatusBadge, UrgencyPill } from './StatusBadge';
@@ -23,6 +23,7 @@ const NEXT_STATUS_OPTIONS: Record<CaseStatus, CaseStatus[]> = {
 export default function CaseDetail({ basePath }: { basePath: string }) {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [c, setC] = useState<Case | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -48,6 +49,7 @@ export default function CaseDetail({ basePath }: { basePath: string }) {
   if (!c) return null;
 
   const isCitizen = user?.role === 'citizen';
+  const canDelete =   isCitizen && (c.status === 'submitted' || c.status === 'triaged');
   const isVolunteerOrSupervisor = user?.role === 'volunteer' || user?.role === 'supervisor';
   const canChangeStatus = user?.role === 'volunteer' || user?.role === 'supervisor';
   const options = NEXT_STATUS_OPTIONS[c.status] || [];
@@ -60,6 +62,12 @@ export default function CaseDetail({ basePath }: { basePath: string }) {
     setStatusNote('');
     refresh();
   };
+
+  const deleteCase = async () => {
+  if (!window.confirm('Delete this case? This cannot be undone.')) return;
+  await casesApi.remove(c.id);
+  navigate(basePath);
+};
 
   return (
     <div className="max-w-3xl">
@@ -80,10 +88,11 @@ export default function CaseDetail({ basePath }: { basePath: string }) {
       </div>
 
       {isCitizen && (
-        <div className="flex gap-2 mb-6">
-          <Link to={`/citizen/cases/${c.id}/documents`}><Button variant="secondary">Upload documents</Button></Link>
-          <Link to={`/citizen/cases/${c.id}/book`}><Button variant="secondary">Book appointment</Button></Link>
-        </div>
+       <div className="flex gap-2 mb-6">
+        <Link to={`/citizen/cases/${c.id}/documents`}><Button variant="secondary">Upload documents</Button></Link>
+        <Link to={`/citizen/cases/${c.id}/book`}><Button variant="secondary">Book appointment</Button></Link>
+        {canDelete && <Button variant="danger" onClick={deleteCase}>Delete case</Button>}
+       </div>
       )}
 
       {canChangeStatus && options.length > 0 && (

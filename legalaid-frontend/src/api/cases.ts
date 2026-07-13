@@ -8,6 +8,10 @@ export const casesApi = {
     api.patch(`/cases/${id}/status`, data).then((r) => r.data),
   assign: (id: string, volunteerId: string) => api.patch(`/cases/${id}/assign`, { volunteerId }).then((r) => r.data),
   setOutcome: (id: string, outcome: string) => api.patch(`/cases/${id}/outcome`, { outcome }).then((r) => r.data),
+  manualClassify: (id: string, data: { domain: string; urgency: string }) =>   // 👈 ye add karo
+    api.patch(`/cases/${id}/classify`, data).then((r) => r.data),
+  remove: (id: string) => api.delete(`/cases/${id}`).then((r) => r.data),
+  myStatusBreakdown: () => api.get('/cases/stats/status-breakdown').then((r) => r.data),
 };
 
 export const documentsApi = {
@@ -46,6 +50,10 @@ export const appointmentsApi = {
 export const usersApi = {
   volunteers: () => api.get('/users/volunteers').then((r) => r.data),
   all: (role?: string) => api.get('/users', { params: role ? { role } : {} }).then((r) => r.data),
+  update: (id: string, data: { name?: string; email?: string; role?: string }) =>
+    api.patch(`/users/${id}`, data).then((r) => r.data),
+  setActive: (id: string, isActive: boolean) =>
+    api.patch(`/users/${id}/active`, { isActive }).then((r) => r.data),
 };
 
 export const adminApi = {

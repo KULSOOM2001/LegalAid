@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -6,7 +6,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { UserRole } from '../users/entities/user.entity';
 import { CasesService } from './cases.service';
-import { CreateCaseDto, UpdateStatusDto, AssignCaseDto, SetOutcomeDto } from './dto/case.dto';
+import { CreateCaseDto, UpdateStatusDto, AssignCaseDto, SetOutcomeDto, ManualClassifyDto } from './dto/case.dto';
 
 @ApiTags('cases')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -14,11 +14,24 @@ import { CreateCaseDto, UpdateStatusDto, AssignCaseDto, SetOutcomeDto } from './
 export class CasesController {
   constructor(private casesService: CasesService) {}
 
-  @Roles(UserRole.CITIZEN)
+  @Roles(
+  UserRole.ADMIN,
+  UserRole.SUPERVISOR,
+  UserRole.VOLUNTEER,
+  UserRole.CITIZEN,
+  )
   @Post()
   create(@Body() dto: CreateCaseDto, @CurrentUser() user: any) {
     return this.casesService.create(dto, user);
   }
+
+  @Roles(
+    UserRole.ADMIN,
+    UserRole.CITIZEN)
+  @Delete(':id')
+  remove(@Param('id') id: string, @CurrentUser() user: any) {
+   return this.casesService.deleteCase(id, user);
+} 
 
   @Get()
   findAll(
@@ -38,24 +51,37 @@ export class CasesController {
     });
   }
 
+  @Roles(UserRole.CITIZEN)
+  @Get('stats/status-breakdown')
+  myStatusBreakdown(@CurrentUser() user: any) {
+   return this.casesService.myStatusBreakdown(user.userId);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string, @CurrentUser() user: any) {
     return this.casesService.findOneForUser(id, user);
   }
 
-  @Roles(UserRole.VOLUNTEER, UserRole.SUPERVISOR)
+  @Patch(':id/classify')
+  manualClassify(@Param('id') id: string, @Body() dto: ManualClassifyDto, @CurrentUser() user: any) 
+  {
+    return this.casesService.manualClassify(id, dto, user);
+  }
+
+
+  @Roles(UserRole.ADMIN, UserRole.VOLUNTEER, UserRole.SUPERVISOR)
   @Patch(':id/status')
   updateStatus(@Param('id') id: string, @Body() dto: UpdateStatusDto, @CurrentUser() user: any) {
     return this.casesService.updateStatus(id, dto, user);
   }
 
-  @Roles(UserRole.SUPERVISOR)
+  @Roles(UserRole.ADMIN, UserRole.SUPERVISOR)
   @Patch(':id/assign')
   assign(@Param('id') id: string, @Body() dto: AssignCaseDto, @CurrentUser() user: any) {
     return this.casesService.assign(id, dto, user);
   }
 
-  @Roles(UserRole.VOLUNTEER, UserRole.SUPERVISOR)
+  @Roles(UserRole.ADMIN, UserRole.VOLUNTEER, UserRole.SUPERVISOR)
   @Patch(':id/outcome')
   setOutcome(@Param('id') id: string, @Body() dto: SetOutcomeDto, @CurrentUser() user: any) {
     return this.casesService.setOutcome(id, dto, user);

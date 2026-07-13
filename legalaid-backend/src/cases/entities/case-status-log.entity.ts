@@ -38,6 +38,6 @@ export class CaseStatusLog {
   @Column({ type: 'text', nullable: true })
   note: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 }

@@ -27,7 +27,12 @@ import { DocumentsService } from './documents.service';
 export class DocumentsController {
   constructor(private documentsService: DocumentsService) {}
 
-  @Roles(UserRole.CITIZEN)
+  @Roles(
+  UserRole.ADMIN,
+  UserRole.SUPERVISOR,
+  UserRole.VOLUNTEER,
+  UserRole.CITIZEN
+  )
   @Post('cases/:caseId/documents')
   @UseInterceptors(
     FileInterceptor('file', {

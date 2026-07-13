@@ -24,5 +24,11 @@ export function useCases(params?: Record<string, string | number>) {
     refresh();
   }, [refresh]);
 
+  useEffect(() => {
+  const handler = () => refresh();
+  window.addEventListener('legalaid:case-updated', handler);
+  return () => window.removeEventListener('legalaid:case-updated', handler);
+}, [refresh]);
+
   return { cases, loading, error, refresh };
 }

@@ -1,5 +1,12 @@
-import { IsDateString, IsInt, IsString, IsUUID, Max, Min } from 'class-validator';
-
+import {
+  IsDateString,
+  IsInt,
+  IsString,
+  IsUUID,
+  Max,
+  Min,
+  IsOptional,
+} from 'class-validator';
 export class CreateAppointmentDto {
   @IsUUID()
   caseId: string;
@@ -18,9 +25,11 @@ export class UpdateAppointmentDto {
   @IsString()
   action: 'confirm' | 'reschedule' | 'cancel';
 
+  @IsOptional()
   @IsDateString()
   startsAt?: string;
 
+  @IsOptional()
   @IsDateString()
   endsAt?: string;
 }

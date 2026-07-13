@@ -46,7 +46,7 @@ import { AiInteraction } from './ai-proxy/entities/ai-interaction.entity';
       ],
       // synchronize:true is fine for a course project / Neon dev branch.
       // Switch to migrations (see migrations/ folder) before any real deployment.
-      synchronize: true,
+      synchronize: false,
       logging: false,
     }),
     AuthModule,

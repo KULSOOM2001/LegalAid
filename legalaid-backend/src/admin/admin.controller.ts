@@ -8,7 +8,7 @@ import { AdminService } from './admin.service';
 
 @ApiTags('admin')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(UserRole.ADMIN)
+@Roles(UserRole.ADMIN, UserRole.SUPERVISOR)
 @Controller('admin')
 export class AdminController {
   constructor(private adminService: AdminService) {}

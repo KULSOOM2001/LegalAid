@@ -8,19 +8,34 @@ import { buildSummarisePrompt } from './prompts/summarise.prompt';
 import { buildDraftLetterPrompt } from './prompts/draft-letter.prompt';
 import { buildPredictOutcomePrompt } from './prompts/predict-outcome.prompt';
 
-type AiResult<T> = { success: true; data: T } | { success: false; fallback: true; error: string };
+type AiResult<T> =
+  | { success: true; data: T }
+  | { success: false; fallback: true; error: string };
 
 @Injectable()
 export class AiProxyService {
   private readonly logger = new Logger(AiProxyService.name);
+
   private apiKey = process.env.GEMINI_API_KEY || '';
-  private model = 'gemini-2.5-flash'; // free tier model
+
+  private model = 'gemini-3.1-flash-lite';
 
   constructor(
-    @InjectRepository(AiInteraction) private aiInteractionRepo: Repository<AiInteraction>,
+    @InjectRepository(AiInteraction)
+    private aiInteractionRepo: Repository<AiInteraction>,
   ) {
     if (!this.apiKey) {
-      this.logger.warn('GEMINI_API_KEY not set — AI features will always use fallback behaviour.');
+      this.logger.warn(
+        'GEMINI_API_KEY not set — AI features will use fallback.',
+      );
+    } else {
+      console.log('================ GEMINI DEBUG ================');
+      console.log(
+        'API KEY:',
+        this.apiKey.substring(0, 10) + '********',
+      );
+      console.log('MODEL:', this.model);
+      console.log('==============================================');
     }
   }
 
@@ -33,36 +48,108 @@ export class AiProxyService {
     const start = Date.now();
 
     if (!this.apiKey) {
-      await this.logInteraction(feature, prompt, null, true, 'AI client not configured (missing API key)', Date.now() - start, context);
-      return { success: false, fallback: true, error: 'AI client not configured' };
+      await this.logInteraction(
+        feature,
+        prompt,
+        null,
+        true,
+        'Missing API Key',
+        Date.now() - start,
+        context,
+      );
+
+      return {
+        success: false,
+        fallback: true,
+        error: 'Missing API Key',
+      };
     }
 
     try {
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent?key=${this.apiKey}`;
+
+      console.log('\n=========== GEMINI REQUEST ===========');
+      console.log('Feature :', feature);
+      console.log('Model   :', this.model);
+      console.log('URL     :', url);
+      console.log('======================================\n');
+
       const response = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
+          contents: [
+            {
+              parts: [
+                {
+                  text: prompt,
+                },
+              ],
+            },
+          ],
         }),
       });
 
+      const responseText = await response.text();
+
+      console.log('\n=========== GEMINI RESPONSE ===========');
+      console.log('Status :', response.status);
+      console.log(responseText);
+      console.log('=======================================\n');
+
       if (!response.ok) {
-        const errText = await response.text();
-        throw new Error(`Gemini API error ${response.status}: ${errText}`);
+        throw new Error(
+          `Gemini API ${response.status}: ${responseText}`,
+        );
       }
 
-      const json: any = await response.json();
-      const rawText = json?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+      const json = JSON.parse(responseText);
+
+      const rawText =
+        json?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+
       const parsed = parse(rawText);
 
-      await this.logInteraction(feature, prompt, rawText, false, null, Date.now() - start, context);
-      return { success: true, data: parsed };
+      await this.logInteraction(
+        feature,
+        prompt,
+        rawText,
+        false,
+        null,
+        Date.now() - start,
+        context,
+      );
+
+      return {
+        success: true,
+        data: parsed,
+      };
     } catch (err: any) {
-      const message = err?.message || 'Unknown AI error';
-      this.logger.error(`AI feature ${feature} failed: ${message}`);
-      await this.logInteraction(feature, prompt, null, true, message, Date.now() - start, context);
-      return { success: false, fallback: true, error: message };
+      const message = err?.message || 'Unknown AI Error';
+
+      console.error('\n========== GEMINI ERROR ==========');
+      console.error(message);
+      console.error('==================================\n');
+
+      this.logger.error(message);
+
+      await this.logInteraction(
+        feature,
+        prompt,
+        null,
+        true,
+        message,
+        Date.now() - start,
+        context,
+      );
+
+      return {
+        success: false,
+        fallback: true,
+        error: message,
+      };
     }
   }
 
@@ -85,6 +172,7 @@ export class AiProxyService {
       caseId: context.caseId,
       requestedById: context.requestedById,
     });
+
     await this.aiInteractionRepo.save(row);
   }
 
@@ -94,24 +182,66 @@ export class AiProxyService {
   }
 
   async classifyCase(c: Case, requestedById: string) {
-    const prompt = buildClassifyPrompt({ title: c.title, description: c.description });
-    return this.call(AiFeature.CLASSIFY, prompt, (t) => this.parseJson(t), { caseId: c.id, requestedById });
+    const prompt = buildClassifyPrompt({
+      title: c.title,
+      description: c.description,
+    });
+
+    return this.call(
+      AiFeature.CLASSIFY,
+      prompt,
+      (t) => this.parseJson(t),
+      {
+        caseId: c.id,
+        requestedById,
+      },
+    );
   }
 
-  async summariseDocument(input: { caseId: string; caseTitle: string; documentText: string; requestedById: string }) {
-    const prompt = buildSummarisePrompt({ caseTitle: input.caseTitle, documentText: input.documentText });
-    return this.call(AiFeature.SUMMARISE_DOCUMENT, prompt, (t) => this.parseJson(t), {
-      caseId: input.caseId,
-      requestedById: input.requestedById,
+  async summariseDocument(input: {
+    caseId: string;
+    caseTitle: string;
+    documentText: string;
+    requestedById: string;
+  }) {
+    const prompt = buildSummarisePrompt({
+      caseTitle: input.caseTitle,
+      documentText: input.documentText,
     });
+
+    return this.call(
+      AiFeature.SUMMARISE_DOCUMENT,
+      prompt,
+      (t) => this.parseJson(t),
+      {
+        caseId: input.caseId,
+        requestedById: input.requestedById,
+      },
+    );
   }
 
-  async draftLetter(input: { caseId: string; caseTitle: string; domain: string; roughNote: string; requestedById: string }) {
-    const prompt = buildDraftLetterPrompt({ caseTitle: input.caseTitle, domain: input.domain, roughNote: input.roughNote });
-    return this.call(AiFeature.DRAFT_LETTER, prompt, (t) => t.trim(), {
-      caseId: input.caseId,
-      requestedById: input.requestedById,
+  async draftLetter(input: {
+    caseId: string;
+    caseTitle: string;
+    domain: string;
+    roughNote: string;
+    requestedById: string;
+  }) {
+    const prompt = buildDraftLetterPrompt({
+      caseTitle: input.caseTitle,
+      domain: input.domain,
+      roughNote: input.roughNote,
     });
+
+    return this.call(
+      AiFeature.DRAFT_LETTER,
+      prompt,
+      (t) => t.trim(),
+      {
+        caseId: input.caseId,
+        requestedById: input.requestedById,
+      },
+    );
   }
 
   async predictOutcome(input: {
@@ -124,13 +254,22 @@ export class AiProxyService {
     requestedById: string;
   }) {
     const prompt = buildPredictOutcomePrompt(input);
-    return this.call(AiFeature.PREDICT_OUTCOME, prompt, (t) => this.parseJson(t), {
-      caseId: input.caseId,
-      requestedById: input.requestedById,
-    });
+
+    return this.call(
+      AiFeature.PREDICT_OUTCOME,
+      prompt,
+      (t) => this.parseJson(t),
+      {
+        caseId: input.caseId,
+        requestedById: input.requestedById,
+      },
+    );
   }
 
   async getInteractionsForCase(caseId: string) {
-    return this.aiInteractionRepo.find({ where: { caseId }, order: { createdAt: 'DESC' } });
+    return this.aiInteractionRepo.find({
+      where: { caseId },
+      order: { createdAt: 'DESC' },
+    });
   }
 }

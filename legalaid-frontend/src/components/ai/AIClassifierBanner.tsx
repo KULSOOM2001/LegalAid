@@ -7,20 +7,16 @@ import { UrgencyPill } from '../case/StatusBadge';
 const DOMAINS = ['housing', 'family', 'employment', 'immigration', 'consumer', 'other'];
 const URGENCIES = ['low', 'medium', 'high', 'critical'];
 
-/**
- * Polls the case briefly after creation to see if AI Feature 1 (classify) has
- * landed. If it hasn't after a few tries, shows the manual fallback dropdown
- * per the spec's "Classifier fallback: manual dropdown" behaviour.
- */
 export default function AIClassifierBanner({ caseId, initialCase }: { caseId: string; initialCase: Case }) {
   const [c, setC] = useState(initialCase);
   const [tries, setTries] = useState(0);
   const [manualDomain, setManualDomain] = useState('');
   const [manualUrgency, setManualUrgency] = useState('medium');
   const [showFallback, setShowFallback] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (c.domain) return; // already classified
+    if (c.domain) return;
     if (tries > 6) {
       setShowFallback(true);
       return;
@@ -78,6 +74,26 @@ export default function AIClassifierBanner({ caseId, initialCase }: { caseId: st
               ))}
             </select>
           </div>
+          <button
+            className="btn-primary mt-3"
+            disabled={!manualDomain || submitting}
+            onClick={async () => {
+              setSubmitting(true);
+              try {
+                const updated = await casesApi.manualClassify(caseId, {
+                  domain: manualDomain,
+                  urgency: manualUrgency,
+                });
+                setC(updated);
+              } catch (err) {
+                console.error('Manual classify failed', err);
+              } finally {
+                setSubmitting(false);
+              }
+            }}
+          >
+            {submitting ? 'Saving…' : 'Save classification'}
+          </button>
         </div>
       </div>
     </div>

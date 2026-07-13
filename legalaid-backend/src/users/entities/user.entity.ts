@@ -50,9 +50,9 @@ export class User {
   @Column({ type: 'int', default: 8 })
   maxActiveCases: number;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   updatedAt: Date;
 }

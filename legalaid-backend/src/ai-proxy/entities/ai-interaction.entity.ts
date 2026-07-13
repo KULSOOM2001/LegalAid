@@ -48,6 +48,6 @@ export class AiInteraction {
   @Column({ type: 'int', nullable: true })
   latencyMs: number;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 }

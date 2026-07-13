@@ -18,6 +18,7 @@ import BookAppointment from './pages/citizen/BookAppointment';
 import VolunteerDashboard from './pages/volunteer/Dashboard';
 import VolunteerCaseDetail from './pages/volunteer/CaseDetail';
 import VolunteerAvailability from './pages/volunteer/Availability';
+import VolunteerAppointments from './pages/volunteer/Appointments';
 
 import CaseloadOverview from './pages/supervisor/CaseloadOverview';
 import SupervisorCaseDetail from './pages/supervisor/CaseDetail';
@@ -63,6 +64,7 @@ export default function App() {
             <Route path="/volunteer" element={<VolunteerDashboard />} />
             <Route path="/volunteer/cases/:id" element={<VolunteerCaseDetail />} />
             <Route path="/volunteer/availability" element={<VolunteerAvailability />} />
+            <Route path="/volunteer/appointments" element={<VolunteerAppointments />} />
           </Route>
         </Route>
 

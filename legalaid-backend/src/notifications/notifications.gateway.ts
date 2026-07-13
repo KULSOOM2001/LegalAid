@@ -85,6 +85,28 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
     await this.push(userId, 'notification:new', message, meta);
   }
 
+  async notifyAppointmentRequested(appt: Appointment) {
+  await this.push(
+    appt.volunteerId,
+    'appointment:requested',
+    `New appointment request for ${new Date(appt.startsAt).toLocaleString()}`,
+    { appointmentId: appt.id },
+  );
+}
+
+async notifyAppointmentStatusChanged(appt: Appointment) {
+  const label =
+    appt.status === 'confirmed' ? 'confirmed' :
+    appt.status === 'cancelled' ? 'cancelled' :
+    appt.status === 'rescheduled' ? 'rescheduled' : appt.status;
+  await this.push(
+    appt.citizenId,
+    'appointment:status_changed',
+    `Your appointment was ${label} by the volunteer`,
+    { appointmentId: appt.id, status: appt.status },
+  );
+}
+
   /**
    * Feature 4.1: high-urgency cases trigger an immediate supervisor notification.
    * Broadcasts to the whole `role:supervisor` room since any supervisor on
@@ -101,4 +123,13 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
       createdAt: new Date(),
     });
   }
+
+  async notifyNewCase(c: Case) {
+  this.server.to('role:volunteer').emit('case:new', {
+    id: c.id,
+    title: c.title,
+    status: c.status,
+    createdAt: c.createdAt,
+  });
+}
 }

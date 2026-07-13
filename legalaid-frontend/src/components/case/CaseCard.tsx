@@ -24,7 +24,7 @@ export default function CaseCard({ c, basePath }: { c: Case; basePath: string })
           <span className="text-[10px] font-mono uppercase tracking-wider text-slate">{c.domain}</span>
         )}
         <span className="text-[10px] text-slate ml-auto">
-          {formatDistanceToNow(new Date(c.createdAt), { addSuffix: true })}
+          {formatDistanceToNow(new Date(c.createdAt), { addSuffix: true })} 
         </span>
       </div>
     </button>

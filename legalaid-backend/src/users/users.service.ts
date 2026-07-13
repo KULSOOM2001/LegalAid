@@ -32,6 +32,11 @@ export class UsersService {
     return this.usersRepo.save(user);
   }
 
+  async update(id: string, data: { name?: string; email?: string; role?: UserRole }) {
+  await this.findOne(id); // throws NotFoundException if missing
+  await this.usersRepo.update(id, data);
+  return this.findOne(id);
+  }
   async setActive(id: string, isActive: boolean) {
     await this.usersRepo.update(id, { isActive });
     return this.findOne(id);

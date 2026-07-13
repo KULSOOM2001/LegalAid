@@ -1,12 +1,19 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { useCases } from '../../hooks/useCases';
+import { casesApi } from '../../api/cases';
 import CaseCard from '../../components/case/CaseCard';
+import MyCasesStatusChart from '../../components/charts/MyCasesStatusChart';
 import Button from '../../components/common/Button';
 
 export default function CitizenDashboard() {
   const { cases, loading, error } = useCases();
+  const [statusData, setStatusData] = useState<{ status: string; count: number }[]>([]);
+
+  useEffect(() => {
+    casesApi.myStatusBreakdown().then(setStatusData).catch(() => {});
+  }, [cases.length]);
 
   return (
     <div>
@@ -21,6 +28,8 @@ export default function CitizenDashboard() {
           </Button>
         </Link>
       </div>
+
+      {!loading && !error && cases.length > 0 && <MyCasesStatusChart data={statusData} />}
 
       {loading && <p className="text-sm text-slate">Loading…</p>}
       {error && <p className="text-sm text-crit">{error}</p>}

@@ -26,7 +26,13 @@ export default function OutcomePredictionBadge({ caseId }: { caseId: string }) {
     }
   };
 
-  if (unavailable) return null;
+  if (unavailable) {
+  return (
+    <p className="text-xs text-slate italic">
+      AI outcome estimate unavailable right now — proceed with manual judgement.
+    </p>
+  );
+}
 
   if (!result) {
     return (

@@ -33,7 +33,7 @@ export class AiProxyController {
     @InjectRepository(CaseNote) private notesRepo: Repository<CaseNote>,
   ) {}
 
-  @Roles(UserRole.VOLUNTEER, UserRole.SUPERVISOR)
+  @Roles(UserRole.ADMIN, UserRole.VOLUNTEER, UserRole.SUPERVISOR)
   @Post('predict-outcome')
   async predictOutcome(@Body() dto: PredictOutcomeDto, @CurrentUser() user: any) {
     const c = await this.casesRepo.findOne({ where: { id: dto.caseId } });

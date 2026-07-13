@@ -71,12 +71,12 @@ export class Case {
   @OneToMany(() => CaseNote, (note) => note.case)
   notes: CaseNote[];
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   updatedAt: Date;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ type: 'timestamptz', nullable: true })
   resolvedAt: Date;
 }

@@ -1,5 +1,5 @@
 import { IsEnum, IsOptional, IsString, IsUUID } from 'class-validator';
-import { CaseStatus, CaseOutcome } from '../entities/case.entity';
+import { CaseStatus, CaseOutcome, CaseDomain, CaseUrgency } from '../entities/case.entity';
 
 export class CreateCaseDto {
   @IsString()
@@ -16,6 +16,13 @@ export class UpdateStatusDto {
   @IsOptional()
   @IsString()
   note?: string;
+}
+export class ManualClassifyDto {
+  @IsEnum(CaseDomain)
+  domain: CaseDomain;
+
+  @IsEnum(CaseUrgency)
+  urgency: CaseUrgency;
 }
 
 export class AssignCaseDto {

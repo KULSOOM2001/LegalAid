@@ -14,19 +14,22 @@ import {
 } from './entities/case.entity';
 import { CaseStatusLog } from './entities/case-status-log.entity';
 import { User, UserRole } from '../users/entities/user.entity';
-import { CreateCaseDto, UpdateStatusDto, AssignCaseDto, SetOutcomeDto } from './dto/case.dto';
+import { CreateCaseDto, UpdateStatusDto, AssignCaseDto, SetOutcomeDto, ManualClassifyDto } from './dto/case.dto';
 import { AiProxyService } from '../ai-proxy/ai-proxy.service';
 import { NotificationsGateway } from '../notifications/notifications.gateway';
+import { Appointment } from '../appointments/entities/appointment.entity';
 
 @Injectable()
 export class CasesService {
-  constructor(
-    @InjectRepository(Case) private casesRepo: Repository<Case>,
-    @InjectRepository(CaseStatusLog) private statusLogRepo: Repository<CaseStatusLog>,
-    @InjectRepository(User) private usersRepo: Repository<User>,
-    private aiProxyService: AiProxyService,
-    private notificationsGateway: NotificationsGateway,
-  ) {}
+constructor(
+  @InjectRepository(Case) private casesRepo: Repository<Case>,
+  @InjectRepository(CaseStatusLog) private statusLogRepo: Repository<CaseStatusLog>,
+  @InjectRepository(User) private usersRepo: Repository<User>,
+  @InjectRepository(Appointment)
+  private appointmentRepo: Repository<Appointment>,
+  private aiProxyService: AiProxyService,
+  private notificationsGateway: NotificationsGateway,
+) {}
 
   async create(dto: CreateCaseDto, citizen: { userId: string }) {
     const created = this.casesRepo.create({
@@ -36,7 +39,7 @@ export class CasesService {
       status: CaseStatus.SUBMITTED,
     });
     const saved = await this.casesRepo.save(created);
-
+    await this.notificationsGateway.notifyNewCase(saved);
     await this.writeStatusLog(saved.id, null, CaseStatus.SUBMITTED, citizen.userId, 'Case submitted');
 
     // Fire-and-forget AI classification (Feature 1) — does not block case creation.
@@ -170,8 +173,84 @@ export class CasesService {
     return found;
   }
 
+  async manualClassify(id: string, dto: ManualClassifyDto, user: { userId: string; role: UserRole }) {
+  const found = await this.casesRepo.findOne({ where: { id } });
+  if (!found) throw new NotFoundException('Case not found');
+
+  // Sirf case ka owner citizen, ya supervisor/admin classify kar sake
+  const isOwner = found.citizenId === user.userId;
+  const isElevated = user.role === UserRole.SUPERVISOR || user.role === UserRole.ADMIN;
+  if (!isOwner && !isElevated) {
+    throw new ForbiddenException('Only the case owner or a supervisor can classify this case');
+  }
+
+  found.domain = dto.domain;
+  found.urgency = dto.urgency;
+  found.aiClassificationRationale = 'Manually classified (AI unavailable)';
+  if (found.status === CaseStatus.SUBMITTED) found.status = CaseStatus.TRIAGED;
+  await this.casesRepo.save(found);
+  await this.writeStatusLog(id, CaseStatus.SUBMITTED, found.status, user.userId, 'Manually classified by user');
+
+  if (dto.urgency === 'high' || dto.urgency === 'critical') {
+    await this.notificationsGateway.notifyHighUrgencyCase(found);
+  }
+
+  return found;
+}
+
   private async writeStatusLog(caseId: string, from: CaseStatus | null, to: CaseStatus, changedById: string, note?: string) {
     const log = this.statusLogRepo.create({ caseId, fromStatus: from, toStatus: to, changedById, note });
     return this.statusLogRepo.save(log);
   }
+
+async deleteCase(id: string, user: { userId: string; role: UserRole }) {
+  const found = await this.casesRepo.findOne({ where: { id } });
+
+  if (!found) {
+    throw new NotFoundException('Case not found');
+  }
+
+  if (found.citizenId !== user.userId) {
+    throw new ForbiddenException('You can only delete your own case');
+  }
+
+  if (
+    found.status !== CaseStatus.SUBMITTED &&
+    found.status !== CaseStatus.TRIAGED
+  ) {
+    throw new BadRequestException(
+      'Case can only be deleted before a volunteer is assigned.',
+    );
+  }
+
+  // Delete all appointments linked to this case
+  await this.appointmentRepo.delete({
+    caseId: found.id,
+  });
+
+  // Delete status logs
+  await this.statusLogRepo.delete({
+    caseId: found.id,
+  });
+
+  // Delete the case
+  await this.casesRepo.delete(found.id);
+
+  return {
+    deleted: true,
+    id: found.id,
+  };
+}
+
+async myStatusBreakdown(citizenId: string) {
+  const rows = await this.casesRepo
+    .createQueryBuilder('c')
+    .select('c.status', 'status')
+    .addSelect('COUNT(*)', 'count')
+    .where('c.citizenId = :citizenId', { citizenId })
+    .groupBy('c.status')
+    .getRawMany();
+  return rows.map((r) => ({ status: r.status, count: parseInt(r.count, 10) }));
+}
+
 }

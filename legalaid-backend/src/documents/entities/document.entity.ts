@@ -50,6 +50,6 @@ export class Document {
   @Column({ default: false })
   summaryPending: boolean;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 }

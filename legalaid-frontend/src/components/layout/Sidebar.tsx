@@ -20,6 +20,7 @@ const NAV: Record<string, { to: string; label: string; icon: any }[]> = {
   volunteer: [
     { to: '/volunteer', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/volunteer/availability', label: 'Availability', icon: CalendarClock },
+    { to: '/volunteer/appointments', label: 'Appointments', icon: CalendarClock }
   ],
   supervisor: [
     { to: '/supervisor', label: 'Caseload overview', icon: FolderKanban },
