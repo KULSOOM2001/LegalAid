@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Case, CaseStatus } from '../cases/entities/case.entity';
@@ -12,7 +12,6 @@ export class AdminService {
   ) {}
 
   async volume() {
-    // cases created per day for the last 30 days (kept for the existing area chart)
     const rows = await this.casesRepo
       .createQueryBuilder('c')
       .select("to_char(c.createdAt, 'YYYY-MM-DD')", 'date')
@@ -24,7 +23,6 @@ export class AdminService {
     return rows.map((r) => ({ date: r.date, count: parseInt(r.count, 10) }));
   }
 
-  // Spec 3.6: case volume by legal domain
   async volumeByDomain() {
     const rows = await this.casesRepo
       .createQueryBuilder('c')
@@ -35,7 +33,6 @@ export class AdminService {
     return rows.map((r) => ({ domain: r.domain || 'unclassified', count: parseInt(r.count, 10) }));
   }
 
-  // Spec 3.6: case volume by volunteer
   async volumeByVolunteer() {
     const rows = await this.casesRepo
       .createQueryBuilder('c')
@@ -50,7 +47,6 @@ export class AdminService {
     return rows.map((r) => ({ volunteerId: r.volunteerId, volunteerName: r.volunteerName, count: parseInt(r.count, 10) }));
   }
 
-  // Spec 3.6: case volume by month
   async volumeByMonth() {
     const rows = await this.casesRepo
       .createQueryBuilder('c')
@@ -111,5 +107,51 @@ export class AdminService {
       .groupBy('c.status')
       .getRawMany();
     return rows.map((r) => ({ status: r.status, count: parseInt(r.count, 10) }));
+  }
+
+  // --- Edit user ---
+  async updateUser(
+    id: string,
+    dto: { name?: string; email?: string; role?: UserRole; maxActiveCases?: number },
+  ) {
+    const user = await this.usersRepo.findOne({ where: { id } });
+    if (!user) throw new NotFoundException('User not found');
+
+    if (dto.email && dto.email !== user.email) {
+      const existing = await this.usersRepo.findOne({ where: { email: dto.email } });
+      if (existing) throw new ConflictException('Another user already has this email');
+    }
+
+    Object.assign(user, {
+      name: dto.name ?? user.name,
+      email: dto.email ?? user.email,
+      role: dto.role ?? user.role,
+      maxActiveCases: dto.maxActiveCases ?? user.maxActiveCases,
+    });
+
+    await this.usersRepo.save(user);
+    return user;
+  }
+
+  // --- Delete user (permanent) ---
+  async deleteUser(id: string, requestingUserId: string) {
+    if (id === requestingUserId) {
+      throw new BadRequestException('You cannot delete your own account.');
+    }
+
+    const user = await this.usersRepo.findOne({ where: { id } });
+    if (!user) throw new NotFoundException('User not found');
+
+    const asCitizen = await this.casesRepo.count({ where: { citizenId: id } });
+    const asVolunteer = await this.casesRepo.count({ where: { volunteerId: id } });
+
+    if (asCitizen > 0 || asVolunteer > 0) {
+      throw new BadRequestException(
+        `Cannot delete ${user.name}: they are linked to ${asCitizen + asVolunteer} case(s) as citizen/volunteer. Reassign or close those cases first.`,
+      );
+    }
+
+    await this.usersRepo.remove(user);
+    return { success: true };
   }
 }

@@ -63,6 +63,9 @@ export const adminApi = {
   utilisation: () => api.get('/admin/stats/utilisation').then((r) => r.data),
   statusBreakdown: () => api.get('/admin/stats/status-breakdown').then((r) => r.data),
   users: () => api.get('/admin/users').then((r) => r.data),
+  updateUser: (id: string, data: { name?: string; email?: string; role?: string; maxActiveCases?: number }) =>
+    api.patch(`/admin/users/${id}`, data).then((r) => r.data),
+  deleteUser: (id: string) => api.delete(`/admin/users/${id}`).then((r) => r.data),
 };
 
 export const notificationsApi = {
