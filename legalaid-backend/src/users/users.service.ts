@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User, UserRole } from './entities/user.entity';
@@ -39,6 +39,20 @@ export class UsersService {
   }
   async setActive(id: string, isActive: boolean) {
     await this.usersRepo.update(id, { isActive });
+    return this.findOne(id);
+  }
+
+  // Supervisors (and admins) set per-volunteer capacity limits — spec 3.2:
+  // "Supervisor can reassign cases and set capacity limits per volunteer."
+  async setCapacity(id: string, maxActiveCases: number) {
+    const user = await this.findOne(id);
+    if (user.role !== UserRole.VOLUNTEER) {
+      throw new ForbiddenException('Capacity limits can only be set on volunteer accounts');
+    }
+    if (maxActiveCases == null || maxActiveCases < 0) {
+      throw new ForbiddenException('maxActiveCases must be a non-negative number');
+    }
+    await this.usersRepo.update(id, { maxActiveCases });
     return this.findOne(id);
   }
 }

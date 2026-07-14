@@ -42,8 +42,7 @@ services:
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-change_this_refresh_secret}
       JWT_ACCESS_EXPIRES: 15m
       JWT_REFRESH_EXPIRES: 7d
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-sk-ant-your-key-here}
-      AI_MODEL: claude-sonnet-4-6
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-AQ.Ab8RN6IPZ4hPEx-ghsHJMXcVZDdtfM2GTxEQH8k0QP01926jpg}
       PORT: 3000
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
     volumes:

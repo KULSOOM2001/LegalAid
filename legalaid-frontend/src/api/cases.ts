@@ -65,6 +65,8 @@ export const usersApi = {
     api.patch(`/users/${id}`, data).then((r) => r.data),
   setActive: (id: string, isActive: boolean) =>
     api.patch(`/users/${id}/active`, { isActive }).then((r) => r.data),
+  setCapacity: (id: string, maxActiveCases: number) =>
+    api.patch(`/users/${id}/capacity`, { maxActiveCases }).then((r) => r.data),
 };
 
 export const adminApi = {

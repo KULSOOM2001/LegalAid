@@ -7,6 +7,7 @@ export interface User {
   role: UserRole;
   supervisorId?: string;
   isActive: boolean;
+  maxActiveCases?: number;
   createdAt: string;
 }
 

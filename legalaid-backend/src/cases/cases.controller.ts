@@ -12,14 +12,9 @@ import { CreateCaseDto, UpdateStatusDto, AssignCaseDto, SetOutcomeDto, ManualCla
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('cases')
 export class CasesController {
-  constructor(private casesService: CasesService) {}
+  constructor(private casesService: CasesService) { }
 
-  @Roles(
-  UserRole.ADMIN,
-  UserRole.SUPERVISOR,
-  UserRole.VOLUNTEER,
-  UserRole.CITIZEN,
-  )
+  @Roles(UserRole.CITIZEN)
   @Post()
   create(@Body() dto: CreateCaseDto, @CurrentUser() user: any) {
     return this.casesService.create(dto, user);
@@ -30,8 +25,8 @@ export class CasesController {
     UserRole.CITIZEN)
   @Delete(':id')
   remove(@Param('id') id: string, @CurrentUser() user: any) {
-   return this.casesService.deleteCase(id, user);
-} 
+    return this.casesService.deleteCase(id, user);
+  }
 
   @Get()
   findAll(
@@ -54,7 +49,7 @@ export class CasesController {
   @Roles(UserRole.CITIZEN)
   @Get('stats/status-breakdown')
   myStatusBreakdown(@CurrentUser() user: any) {
-   return this.casesService.myStatusBreakdown(user.userId);
+    return this.casesService.myStatusBreakdown(user.userId);
   }
 
   @Get(':id')
@@ -63,8 +58,7 @@ export class CasesController {
   }
 
   @Patch(':id/classify')
-  manualClassify(@Param('id') id: string, @Body() dto: ManualClassifyDto, @CurrentUser() user: any) 
-  {
+  manualClassify(@Param('id') id: string, @Body() dto: ManualClassifyDto, @CurrentUser() user: any) {
     return this.casesService.manualClassify(id, dto, user);
   }
 

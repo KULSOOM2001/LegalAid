@@ -15,10 +15,30 @@ export default function CaseloadOverview() {
   const [volunteers, setVolunteers] = useState<User[]>([]);
   const [selectedVolunteer, setSelectedVolunteer] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [capacityDrafts, setCapacityDrafts] = useState<Record<string, number>>({});
+  const [savingCapacityId, setSavingCapacityId] = useState<string | null>(null);
+
+  const loadVolunteers = () => usersApi.volunteers().then((vs: User[]) => {
+    setVolunteers(vs);
+    setCapacityDrafts(Object.fromEntries(vs.map((v) => [v.id, v.maxActiveCases ?? 8])));
+  });
 
   useEffect(() => {
-    usersApi.volunteers().then(setVolunteers);
+    loadVolunteers();
   }, []);
+
+  const activeCaseCount = (volunteerId: string) =>
+    cases.filter((c) => c.volunteer?.id === volunteerId && c.status !== 'resolved' && c.status !== 'closed').length;
+
+  const saveCapacity = async (volunteerId: string) => {
+    setSavingCapacityId(volunteerId);
+    try {
+      await usersApi.setCapacity(volunteerId, capacityDrafts[volunteerId]);
+      await loadVolunteers();
+    } finally {
+      setSavingCapacityId(null);
+    }
+  };
 
   const filtered = statusFilter ? cases.filter((c) => c.status === statusFilter) : cases;
 
@@ -46,6 +66,45 @@ export default function CaseloadOverview() {
       </div>
 
       {loading && <p className="text-sm text-slate">Loading…</p>}
+
+      <div className="card p-4 mb-6">
+        <h2 className="font-display text-lg text-ink mb-1">Volunteer capacity</h2>
+        <p className="text-xs text-slate mb-3">Set the max concurrent active cases each volunteer can carry.</p>
+        <div className="grid gap-2">
+          {volunteers.map((v) => {
+            const active = activeCaseCount(v.id);
+            const draft = capacityDrafts[v.id] ?? v.maxActiveCases ?? 8;
+            const overCapacity = active >= (v.maxActiveCases ?? 8);
+            return (
+              <div key={v.id} className="flex items-center justify-between gap-4 py-1.5 border-b border-parchment last:border-0">
+                <div>
+                  <span className="text-sm font-medium text-ink">{v.name}</span>{' '}
+                  <span className={`text-xs ${overCapacity ? 'text-red-600' : 'text-slate'}`}>
+                    {active} / {v.maxActiveCases ?? 8} active cases
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min={0}
+                    className="input w-20 py-1"
+                    value={draft}
+                    onChange={(e) => setCapacityDrafts((d) => ({ ...d, [v.id]: Number(e.target.value) }))}
+                  />
+                  <Button
+                    variant="secondary"
+                    onClick={() => saveCapacity(v.id)}
+                    disabled={savingCapacityId === v.id || draft === (v.maxActiveCases ?? 8)}
+                  >
+                    {savingCapacityId === v.id ? 'Saving…' : 'Save'}
+                  </Button>
+                </div>
+              </div>
+            );
+          })}
+          {volunteers.length === 0 && <p className="text-xs text-slate">No volunteers found.</p>}
+        </div>
+      </div>
 
       {!loading && (
         <Table<Case>
