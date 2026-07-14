@@ -21,7 +21,7 @@ export function useSocket() {
   socketRef.current = socket;
   
  socket.on('connect', () => {
-  console.log('✅ Socket connected:', socket.id);
+  console.log('Socket connected:', socket.id);
   socket.emit('join', { token });
   setConnected(true);
 });
@@ -36,11 +36,11 @@ socket.on('notification:new', (n: AppNotification) => {
   }
 });
 
-// 👇 naya listener add karo — jab bhi backend "case:new" emit kare
+
 socket.on('case:new', () => {
   window.dispatchEvent(new CustomEvent('legalaid:case-updated'));
 });
-}, [user?.id]);   // 👈 sirf id pe depend karo, poore object pe nahi
+}, [user?.id]); 
 
   return { connected };
 }

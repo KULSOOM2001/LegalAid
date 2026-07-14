@@ -35,7 +35,6 @@ export class AuthService {
     if (existing) throw new ConflictException('An account with this email already exists');
 
     const hashed = await bcrypt.hash(dto.password, 10);
-    // Public signup is always restricted to citizen; other roles are seeded/invited by admin.
     const user = this.usersRepo.create({
       name: dto.name,
       email: dto.email,

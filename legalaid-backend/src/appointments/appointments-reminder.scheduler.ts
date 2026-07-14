@@ -5,12 +5,6 @@ import { Between, Repository, Not } from 'typeorm';
 import { Appointment, AppointmentStatus } from './entities/appointment.entity';
 import { NotificationsGateway } from '../notifications/notifications.gateway';
 
-/**
- * Runs every 5 minutes, finds appointments starting in ~24h or ~1h that
- * haven't been reminded yet, and fires the WebSocket reminder + marks them sent.
- * This is what actually triggers notifyAppointmentReminder() — previously that
- * method existed but nothing ever called it.
- */
 @Injectable()
 export class AppointmentsReminderScheduler {
   private readonly logger = new Logger(AppointmentsReminderScheduler.name);

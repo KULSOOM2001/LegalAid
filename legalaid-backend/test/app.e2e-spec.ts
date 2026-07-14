@@ -3,13 +3,6 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
 
-/**
- * Integration tests against role-protected routes across every controller.
- * Requires DATABASE_URL (Neon/Postgres) to be reachable and the seed script
- * to have been run once (npm run seed) so the fixed test accounts exist:
- *   admin@legalaid.test / supervisor@legalaid.test / volunteer1@legalaid.test
- *   citizen1@legalaid.test   — all with password "password123"
- */
 jest.setTimeout(30000);
 
 describe('LegalAid API (e2e)', () => {
@@ -299,8 +292,6 @@ beforeAll(async () => {
     });
 
     it('a different volunteer (not the note author) CANNOT approve the draft', async () => {
-      // admin token stands in here purely to prove non-author rejection; the
-      // authoring volunteer is the only non-supervisor allowed to approve.
       const res = await request(app.getHttpServer())
         .patch(`/api/notes/${draftNoteId}/approve`)
         .set('Authorization', `Bearer ${adminToken}`)

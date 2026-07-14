@@ -133,7 +133,6 @@ export class AdminService {
     return user;
   }
 
-  // --- Delete user (permanent) ---
   async deleteUser(id: string, requestingUserId: string) {
     if (id === requestingUserId) {
       throw new BadRequestException('You cannot delete your own account.');

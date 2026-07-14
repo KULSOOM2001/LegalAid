@@ -17,12 +17,6 @@ import { Case } from '../cases/entities/case.entity';
 import { Document } from '../documents/entities/document.entity';
 import { Appointment } from '../appointments/entities/appointment.entity';
 
-/**
- * Socket.io gateway. Clients connect and emit `join` with their JWT;
- * the gateway verifies it and joins them to a per-user room (`user:<id>`)
- * and a per-role room (`role:<role>`), matching the spec's
- * "namespaced by role room" requirement.
- */
 @Injectable()
 @WebSocketGateway({ cors: { origin: process.env.FRONTEND_URL || '*' } })
 export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -34,7 +28,6 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
   ) {}
 
   handleConnection(client: Socket) {
-    // Wait for explicit `join` with token before trusting this socket.
   }
 
   handleDisconnect(client: Socket) {}
@@ -107,11 +100,6 @@ async notifyAppointmentStatusChanged(appt: Appointment) {
   );
 }
 
-  /**
-   * Feature 4.1: high-urgency cases trigger an immediate supervisor notification.
-   * Broadcasts to the whole `role:supervisor` room since any supervisor on
-   * shift should see it.
-   */
   async notifyHighUrgencyCase(c: Case) {
     const message = `URGENT (${c.urgency}): new case "${c.title}" needs a supervisor's attention`;
     this.server.to('role:supervisor').emit('notification:new', {

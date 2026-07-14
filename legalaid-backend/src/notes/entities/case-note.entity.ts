@@ -30,8 +30,7 @@ export class CaseNote {
 
   @Column({ type: 'text' })
   content: string;
-
-  // true = AI-drafted letter awaiting volunteer approval
+  
   @Column({ default: false })
   isAiDraft: boolean;
 

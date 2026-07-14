@@ -31,7 +31,6 @@ export class Document {
   @Column()
   originalName: string;
 
-  // Path on disk / S3 key. Actual bytes never live in Postgres.
   @Column()
   storagePath: string;
 

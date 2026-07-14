@@ -31,7 +31,7 @@ import { AiInteraction } from './ai-proxy/entities/ai-interaction.entity';
     TypeOrmModule.forRoot({
       type: 'postgres',
       url: process.env.DATABASE_URL,
-      ssl: { rejectUnauthorized: false }, // required by Neon
+      ssl: { rejectUnauthorized: false },
       entities: [
         User,
         Case,

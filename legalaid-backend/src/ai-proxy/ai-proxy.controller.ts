@@ -16,13 +16,6 @@ class PredictOutcomeDto {
   @IsUUID()
   caseId: string;
 }
-
-/**
- * Most AI routes are internal (called by cases/documents/notes services), matching
- * the spec: "AI Proxy (internal — called by other modules, not directly by frontend)".
- * Feature 4 (predict-outcome) is the one exception the frontend calls directly,
- * since it's an on-demand advisory badge shown only to volunteer/supervisor.
- */
 @ApiTags('ai')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('ai')

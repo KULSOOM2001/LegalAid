@@ -25,7 +25,6 @@ export class UsersService {
     return this.usersRepo.find({ where: { role: UserRole.VOLUNTEER, isActive: true } });
   }
 
-  // Admin invites/seeds non-citizen roles (volunteer/supervisor/admin)
   async createInvited(data: { name: string; email: string; password: string; role: UserRole; supervisorId?: string }) {
     const hashed = await bcrypt.hash(data.password, 10);
     const user = this.usersRepo.create({ ...data, password: hashed });
@@ -33,7 +32,7 @@ export class UsersService {
   }
 
   async update(id: string, data: { name?: string; email?: string; role?: UserRole }) {
-  await this.findOne(id); // throws NotFoundException if missing
+  await this.findOne(id); 
   await this.usersRepo.update(id, data);
   return this.findOne(id);
   }
@@ -42,8 +41,6 @@ export class UsersService {
     return this.findOne(id);
   }
 
-  // Supervisors (and admins) set per-volunteer capacity limits — spec 3.2:
-  // "Supervisor can reassign cases and set capacity limits per volunteer."
   async setCapacity(id: string, maxActiveCases: number) {
     const user = await this.findOne(id);
     if (user.role !== UserRole.VOLUNTEER) {

@@ -21,7 +21,7 @@ export default function UserManagement() {
   const [role, setRole] = useState<UserRole>('volunteer');
   const [error, setError] = useState<string | null>(null);
 
-  // Edit modal state
+
   const [editUser, setEditUser] = useState<User | null>(null);
   const [editName, setEditName] = useState('');
   const [editEmail, setEditEmail] = useState('');
@@ -30,7 +30,7 @@ export default function UserManagement() {
   const [editError, setEditError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  // Delete modal state
+  
   const [confirmUser, setConfirmUser] = useState<User | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -141,7 +141,6 @@ export default function UserManagement() {
         />
       )}
 
-      {/* Invite modal */}
       <Modal open={inviteOpen} onClose={() => setInviteOpen(false)} title="Add user">
         <form onSubmit={invite} className="space-y-3">
           <div>
@@ -169,7 +168,6 @@ export default function UserManagement() {
         </form>
       </Modal>
 
-      {/* Edit modal */}
       <Modal open={!!editUser} onClose={() => setEditUser(null)} title="Edit user">
         <div className="space-y-3">
           <div>
@@ -212,8 +210,6 @@ export default function UserManagement() {
           </div>
         </div>
       </Modal>
-
-      {/* Delete confirmation modal */}
       <Modal open={!!confirmUser} onClose={() => setConfirmUser(null)} title="Delete user">
         <div className="space-y-3">
           <p className="text-sm text-ink">

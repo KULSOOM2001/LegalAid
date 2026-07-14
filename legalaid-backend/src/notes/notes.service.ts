@@ -23,8 +23,6 @@ export class NotesService {
     }
 
     if (dto.draft) {
-      // Feature 3: draft-letter. This fallback path (volunteer writes manually)
-      // always exists regardless of AI availability.
       const result = await this.aiProxyService.draftLetter({
         caseId,
         caseTitle: c.title,

@@ -41,7 +41,7 @@ export class CreateAvailabilityDto {
   dayOfWeek: number;
 
   @IsString()
-  startTime: string; // 'HH:mm'
+  startTime: string; 
 
   @IsString()
   endTime: string;

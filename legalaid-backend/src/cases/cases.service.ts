@@ -41,8 +41,6 @@ constructor(
     const saved = await this.casesRepo.save(created);
     await this.notificationsGateway.notifyNewCase(saved);
     await this.writeStatusLog(saved.id, null, CaseStatus.SUBMITTED, citizen.userId, 'Case submitted');
-
-    // Fire-and-forget AI classification (Feature 1) — does not block case creation.
     this.aiProxyService
       .classifyCase(saved, citizen.userId)
       .then(async (result) => {
@@ -54,8 +52,6 @@ constructor(
             status: CaseStatus.TRIAGED,
           });
           await this.writeStatusLog(saved.id, CaseStatus.SUBMITTED, CaseStatus.TRIAGED, citizen.userId, 'Auto-triaged by AI classifier');
-
-          // Feature 4.1: high-urgency cases trigger an immediate supervisor notification.
           if (result.data.urgency === 'high' || result.data.urgency === 'critical') {
             await this.notificationsGateway.notifyHighUrgencyCase({
               ...saved,
@@ -63,7 +59,6 @@ constructor(
             } as Case);
           }
         }
-        // On fallback, case stays SUBMITTED; frontend shows manual domain/urgency dropdown (AIClassifierBanner).
       })
       .catch(() => undefined);
 
@@ -176,8 +171,6 @@ constructor(
   async manualClassify(id: string, dto: ManualClassifyDto, user: { userId: string; role: UserRole }) {
   const found = await this.casesRepo.findOne({ where: { id } });
   if (!found) throw new NotFoundException('Case not found');
-
-  // Sirf case ka owner citizen, ya supervisor/admin classify kar sake
   const isOwner = found.citizenId === user.userId;
   const isElevated = user.role === UserRole.SUPERVISOR || user.role === UserRole.ADMIN;
   if (!isOwner && !isElevated) {
@@ -223,17 +216,14 @@ async deleteCase(id: string, user: { userId: string; role: UserRole }) {
     );
   }
 
-  // Delete all appointments linked to this case
   await this.appointmentRepo.delete({
     caseId: found.id,
   });
 
-  // Delete status logs
   await this.statusLogRepo.delete({
     caseId: found.id,
   });
 
-  // Delete the case
   await this.casesRepo.delete(found.id);
 
   return {

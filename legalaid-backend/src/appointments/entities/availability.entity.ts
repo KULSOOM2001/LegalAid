@@ -20,11 +20,9 @@ export class Availability {
   @JoinColumn({ name: 'volunteerId' })
   volunteer: User;
 
-  // 0 = Sunday ... 6 = Saturday
   @Column({ type: 'int' })
   dayOfWeek: number;
 
-  // 'HH:mm' 24h format
   @Column()
   startTime: string;
 

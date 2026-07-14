@@ -46,7 +46,7 @@ export class User {
   @Column({ default: true })
   isActive: boolean;
 
-  // Capacity limit: max concurrent active (non-closed) cases this volunteer can hold.
+  
   @Column({ type: 'int', default: 8 })
   maxActiveCases: number;
 

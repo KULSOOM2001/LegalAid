@@ -21,7 +21,7 @@ export class Notification {
   user: User;
 
   @Column()
-  type: string; // e.g. case:status_changed, case:assigned, document:uploaded, appointment:reminder
+  type: string;
 
   @Column({ type: 'text' })
   message: string;

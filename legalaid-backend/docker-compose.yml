@@ -1,14 +1,3 @@
-# Two ways to run this project with Docker:
-#
-# 1) LOCAL POSTGRES (this file, default) — spins up Postgres + backend together
-#    with a single command, no Neon account needed:
-#      docker compose up
-#
-# 2) NEON (managed Postgres) — if you'd rather use your Neon database instead
-#    of the local container, just don't set DATABASE_URL below (or override it)
-#    and point DATABASE_URL in your .env at your Neon connection string, then
-#    run only the api service: docker compose up api
-#
 version: "3.8"
 services:
   db:

@@ -49,7 +49,6 @@ export class AppointmentsService {
       throw new BadRequestException('Volunteer is not available at the requested time');
     }
 
-    // 2. Check for conflicting existing bookings (overlap check).
     const conflict = await this.apptRepo.findOne({
       where: {
         volunteerId: dto.volunteerId,

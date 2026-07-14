@@ -48,9 +48,6 @@ export class UsersController {
     return this.usersService.setActive(id, isActive);
   }
 
-  // Spec 3.2: "Supervisor can reassign cases and set capacity limits per volunteer."
-  // Admins can also do this; both roles are allowed here (unlike the general
-  // profile-edit route above, which stays admin-only).
   @Roles(UserRole.ADMIN, UserRole.SUPERVISOR)
   @Patch(':id/capacity')
   setCapacity(@Param('id') id: string, @Body('maxActiveCases') maxActiveCases: number) {

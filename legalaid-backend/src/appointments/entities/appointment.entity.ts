@@ -25,10 +25,6 @@ export class Appointment {
   @Column()
   caseId: string;
 
-  @ManyToOne(() => Case)
-  @JoinColumn({ name: 'caseId' })
-  case: Case;
-
   @Column()
   citizenId: string;
 
@@ -42,6 +38,10 @@ export class Appointment {
   @ManyToOne(() => User)
   @JoinColumn({ name: 'volunteerId' })
   volunteer: User;
+
+  @ManyToOne(() => Case, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'caseId' })
+  case: Case;
 
   @Column({ type: 'timestamptz' })
   startsAt: Date;

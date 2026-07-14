@@ -56,7 +56,6 @@ export default function MyCasesStatusChart({
 
   return (
     <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 mb-6 shadow-sm hover:shadow-lg transition-shadow duration-300">
-      {/* ambient accent glow */}
       <div className="pointer-events-none absolute -top-24 -right-24 h-56 w-56 rounded-full bg-gradient-to-br from-violet-200/40 to-cyan-200/40 blur-3xl" />
 
       <div className="relative flex items-center justify-between mb-1">
@@ -67,7 +66,6 @@ export default function MyCasesStatusChart({
       </div>
 
       <div className="relative flex flex-col sm:flex-row items-center gap-2">
-        {/* Donut with center readout */}
         <div className="relative w-full sm:w-[220px] h-[220px] shrink-0">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
@@ -124,7 +122,6 @@ export default function MyCasesStatusChart({
             </PieChart>
           </ResponsiveContainer>
 
-          {/* center readout */}
           <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
             <span className="text-2xl font-bold text-slate-800 tabular-nums">
               {active ? active.value : total}
@@ -135,7 +132,6 @@ export default function MyCasesStatusChart({
           </div>
         </div>
 
-        {/* Custom legend */}
         <div className="w-full flex-1 space-y-1.5">
           {chartData.map((entry) => {
             const meta = STATUS_META[entry.key] || FALLBACK;
