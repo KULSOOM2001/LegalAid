@@ -29,6 +29,7 @@ export default function CaseDetail({ basePath }: { basePath: string }) {
   const [error, setError] = useState<string | null>(null);
   const [nextStatus, setNextStatus] = useState('');
   const [statusNote, setStatusNote] = useState('');
+  const [outcomeChoice, setOutcomeChoice] = useState('');
 
   const refresh = async () => {
     if (!id) return;
@@ -60,6 +61,14 @@ export default function CaseDetail({ basePath }: { basePath: string }) {
     setC({ ...c, ...updated });
     setNextStatus('');
     setStatusNote('');
+    refresh();
+  };
+
+  const submitOutcome = async () => {
+    if (!outcomeChoice) return;
+    const updated = await casesApi.setOutcome(c.id, outcomeChoice);
+    setC({ ...c, ...updated });
+    setOutcomeChoice('');
     refresh();
   };
 
@@ -110,6 +119,25 @@ export default function CaseDetail({ basePath }: { basePath: string }) {
               onChange={(e) => setStatusNote(e.target.value)}
             />
             <Button onClick={changeStatus} disabled={!nextStatus}>Update</Button>
+          </div>
+        </div>
+      )}
+
+      {canChangeStatus && (
+        <div className="card p-4 mb-6">
+          <p className="label mb-2">
+            Case outcome{c.outcome ? ` — currently: ${c.outcome}` : ' (not set yet)'}
+          </p>
+          <div className="flex flex-wrap gap-2 items-center">
+            <select className="input w-auto" value={outcomeChoice} onChange={(e) => setOutcomeChoice(e.target.value)}>
+              <option value="">Choose outcome…</option>
+              <option value="won">Won</option>
+              <option value="settled">Settled</option>
+              <option value="referred">Referred</option>
+              <option value="withdrawn">Withdrawn</option>
+              <option value="unresolved">Unresolved</option>
+            </select>
+            <Button onClick={submitOutcome} disabled={!outcomeChoice}>Save outcome</Button>
           </div>
         </div>
       )}
