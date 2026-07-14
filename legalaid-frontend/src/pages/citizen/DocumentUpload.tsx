@@ -30,7 +30,13 @@ export default function DocumentUpload() {
       <FileUpload onUpload={async (file) => { await documentsApi.upload(id!, file); refresh(); }} />
       <div className="mt-6 space-y-3">
         {!loading && docs.length === 0 && <p className="text-sm text-slate">No documents uploaded yet.</p>}
-        {docs.map((d) => <DocumentSummaryCard key={d.id} doc={d} />)}
+        {docs.map((d) => (
+          <DocumentSummaryCard
+            key={d.id}
+            doc={d}
+            onDeleted={(id) => setDocs((prev) => prev.filter((doc) => doc.id !== id))}
+          />
+        ))}
       </div>
     </div>
   );

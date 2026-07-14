@@ -49,7 +49,7 @@ export default function CaseDetail({ basePath }: { basePath: string }) {
   if (!c) return null;
 
   const isCitizen = user?.role === 'citizen';
-  const canDelete =   isCitizen && (c.status === 'submitted' || c.status === 'triaged');
+  const canDelete = isCitizen && (c.status === 'submitted' || c.status === 'triaged');
   const isVolunteerOrSupervisor = user?.role === 'volunteer' || user?.role === 'supervisor';
   const canChangeStatus = user?.role === 'volunteer' || user?.role === 'supervisor';
   const options = NEXT_STATUS_OPTIONS[c.status] || [];
@@ -64,10 +64,10 @@ export default function CaseDetail({ basePath }: { basePath: string }) {
   };
 
   const deleteCase = async () => {
-  if (!window.confirm('Delete this case? This cannot be undone.')) return;
-  await casesApi.remove(c.id);
-  navigate(basePath);
-};
+    if (!window.confirm('Delete this case? This cannot be undone.')) return;
+    await casesApi.remove(c.id);
+    navigate(basePath);
+  };
 
   return (
     <div className="max-w-3xl">
@@ -88,11 +88,11 @@ export default function CaseDetail({ basePath }: { basePath: string }) {
       </div>
 
       {isCitizen && (
-       <div className="flex gap-2 mb-6">
-        <Link to={`/citizen/cases/${c.id}/documents`}><Button variant="secondary">Upload documents</Button></Link>
-        <Link to={`/citizen/cases/${c.id}/book`}><Button variant="secondary">Book appointment</Button></Link>
-        {canDelete && <Button variant="danger" onClick={deleteCase}>Delete case</Button>}
-       </div>
+        <div className="flex gap-2 mb-6">
+          <Link to={`/citizen/cases/${c.id}/documents`}><Button variant="secondary">Upload documents</Button></Link>
+          <Link to={`/citizen/cases/${c.id}/book`}><Button variant="secondary">Book appointment</Button></Link>
+          {canDelete && <Button variant="danger" onClick={deleteCase}>Delete case</Button>}
+        </div>
       )}
 
       {canChangeStatus && options.length > 0 && (
@@ -124,7 +124,16 @@ export default function CaseDetail({ basePath }: { basePath: string }) {
           <h2 className="font-display text-lg text-ink mb-3">Documents</h2>
           <div className="space-y-3">
             {(c.documents || []).length === 0 && <p className="text-sm text-slate">No documents yet.</p>}
-            {(c.documents || []).map((d) => <DocumentSummaryCard key={d.id} doc={d} />)}
+            {(c.documents || []).map((d) => (
+              <DocumentSummaryCard
+                key={d.id}
+                doc={d}
+                onDeleted={(id) => setC((prev: any) => ({
+                  ...prev,
+                  documents: prev.documents.filter((doc: any) => doc.id !== id),
+                }))}
+              />
+            ))}
           </div>
         </section>
       </div>

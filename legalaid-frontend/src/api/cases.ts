@@ -22,8 +22,19 @@ export const documentsApi = {
   },
   list: (caseId: string) => api.get(`/cases/${caseId}/documents`).then((r) => r.data),
   downloadUrl: (id: string) => `${api.defaults.baseURL}/documents/${id}/download`,
+  download: (id: string, filename: string) =>
+    api.get(`/documents/${id}/download`, { responseType: 'blob' }).then((res) => {
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    }),
+  delete: (id: string) => api.delete(`/documents/${id}`).then((r) => r.data),   // 👈 naya
 };
-
 export const notesApi = {
   create: (caseId: string, data: { content: string; draft?: boolean }) =>
     api.post(`/cases/${caseId}/notes`, data).then((r) => r.data),

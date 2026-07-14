@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Delete,
   Param,
   Res,
   UploadedFile,
@@ -63,4 +64,9 @@ export class DocumentsController {
   getAccessLogs(@Param('id') id: string) {
     return this.documentsService.getAccessLogs(id);
   }
+
+  @Delete('documents/:id')
+  delete(@Param('id') id: string, @CurrentUser() user: any) {
+  return this.documentsService.delete(id, user);
+}
 }

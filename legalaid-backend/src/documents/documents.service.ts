@@ -55,6 +55,26 @@ export class DocumentsService {
     return saved;
   }
 
+
+  async delete(id: string, user: { userId: string; role: UserRole }) {
+  const doc = await this.docsRepo.findOne({ where: { id }, relations: ['case'] });
+  if (!doc) throw new NotFoundException('Document not found');
+
+  const c = doc.case;
+  const allowed =
+    user.role === UserRole.SUPERVISOR ||
+    user.role === UserRole.ADMIN ||
+    doc.uploadedById === user.userId ||
+    c.citizenId === user.userId;
+  if (!allowed) throw new ForbiddenException('You do not have permission to delete this document');
+
+  if (fs.existsSync(doc.storagePath)) {
+    fs.unlinkSync(doc.storagePath);
+  }
+
+  await this.docsRepo.remove(doc);
+  return { success: true, id };
+}
   private async summariseAsync(doc: Document, c: Case, requestedById: string) {
     const documentText = `Filename: ${doc.originalName}\nType: ${doc.mimeType}\n(Full OCR/text extraction not wired up in this build — summarising based on available metadata.)`;
 
