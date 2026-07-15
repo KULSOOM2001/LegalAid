@@ -1,18 +1,18 @@
-# LegalAid — AI-Powered Legal Case Management System
+# LegalAid — AI-Assisted Public Legal Services Platform
 
 <div align="center">
 
-![LegalAid Banner](https://img.shields.io/badge/LegalAid-⚖️-4A90E2?style=for-the-badge&logo=legal&logoColor=white)
+![LegalAid Banner](https://img.shields.io/badge/LegalAid-⚖️-12233b?style=for-the-badge)
 
-**"Democratizing Justice Through Technology"**
+**"Democratising Justice Through Technology"**
 
 [![NestJS](https://img.shields.io/badge/NestJS-E0234E?style=flat-square&logo=nestjs&logoColor=white)](https://nestjs.com/)
-[![React](https://img.shields.io/badge/React-20232A?style=flat-square&logo=react&logoColor=61DAFB)](https://reactjs.org/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-[![Claude AI](https://img.shields.io/badge/Claude_AI-FF6B6B?style=flat-square&logo=anthropic&logoColor=white)](https://www.anthropic.com/)
-[![Socket.io](https://img.shields.io/badge/Socket.io-010101?style=flat-square&logo=socket.io&logoColor=white)](https://socket.io/)
+[![React](https://img.shields.io/badge/React_18-20232A?style=flat-square&logo=react&logoColor=61DAFB)](https://reactjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL_15-316192?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Gemini](https://img.shields.io/badge/Gemini_API-b98a3d?style=flat-square&logo=google&logoColor=white)](https://ai.google.dev/)
+[![Socket.io](https://img.shields.io/badge/Socket.io-010101?style=flat-square&logo=socket.io&logoColor=white)](https://socket.io/)
+[![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-12233b?style=flat-square&logo=tailwindcss&logoColor=38B2AC)](https://tailwindcss.com/)
 
 </div>
 
@@ -23,648 +23,324 @@
 - [🌟 Features](#-features)
 - [🏗️ Architecture](#️-architecture)
 - [🚀 Quick Start](#-quick-start)
-- [👥 User Roles](#-user-roles)
+- [🔑 Test Accounts](#-test-accounts)
+- [👥 Role Access Matrix](#-role-access-matrix)
 - [🤖 AI Features](#-ai-features)
 - [📊 Database Schema](#-database-schema)
 - [🛠️ Tech Stack](#️-tech-stack)
 - [📁 Project Structure](#-project-structure)
 - [🎯 Demo Scenarios](#-demo-scenarios)
-- [📈 Performance](#-performance)
-- [🤝 Contributing](#-contributing)
-- [📄 License](#-license)
+- [⚠️ Known Issues](#️-known-issues)
 
 ---
 
 ## 🌟 Features
 
-### 🤖 **Intelligent Case Management**
-- **AI-Powered Classification** — Automatically triages cases by domain and urgency using Claude AI
-- **Smart Document Processing** — Extract key information and generate summaries from uploaded documents
-- **AI-Assisted Legal Drafting** — Generate professional legal letters with one click
-- **Graceful Fallback** — All AI features work seamlessly even without API connectivity
+### 🤖 Intelligent Case Management
+- **AI-Powered Classification** — new case submissions are triaged into a legal domain + urgency tier via Gemini, with a one-line rationale stored on the case.
+- **Document Summariser** — uploaded case documents are summarised in plain language, with an urgent-action flag.
+- **AI-Assisted Advisory Letters** — volunteer rough notes are reformatted into a formal draft letter, which the volunteer must explicitly approve before it counts as sent.
+- **Outcome Predictor (bonus)** — an on-demand advisory badge estimating likelihood of a favourable outcome, visible only to volunteers/supervisors.
+- **Graceful Fallback** — every AI call is wrapped; if `GEMINI_API_KEY` is missing or the call fails, the feature degrades (manual dropdown / static message / manual letter) instead of breaking the flow.
 
-### 👥 **Role-Based Dashboards**
+### 👥 Role-Based Dashboards
 | Role | Dashboard Features |
-|------|-------------------|
-| 🏛️ **Admin** | User management, system reports, analytics, audit trails |
-| 👔 **Supervisor** | Case assignment, volunteer management, workflow oversight |
-| 👩‍⚖️ **Volunteer** | Case handling, document management, client communication |
-| 🏠 **Citizen** | Case submission, document upload, status tracking |
+|------|--------------------|
+| 🏛️ **Admin** | User management (invite/edit/deactivate), 8 reporting endpoints, full case visibility |
+| 👔 **Supervisor** | Caseload overview, case reassignment, volunteer capacity management, reviews volunteer notes |
+| ⚖️ **Volunteer** | Assigned cases, document vault, AI letter drafting, case outcome entry, availability & appointments |
+| 🏠 **Citizen** | Case submission, document upload, live status timeline, appointment booking |
 
-### ⚡ **Real-Time Everything**
-- **Live Notifications** — Instant updates via Socket.io
-- **Case Status Changes** — See updates as they happen
-- **Assignment Notifications** — Get alerted when cases are assigned
-- **Collaborative Features** — Multiple users can work simultaneously
+### ⚡ Real-Time Everything
+- Socket.io gateway (`NotificationsGateway`) — clients `join` with their JWT and are placed in a `user:<id>` room and a `role:<role>` room.
+- Live events: case status changes, case assignment, document uploads, appointment requests/reminders, and a broadcast to `role:supervisor` the moment a **high-urgency** case is triaged.
 
-### 🔒 **Enterprise-Grade Security**
-- JWT-based authentication with refresh tokens
-- Role-based access control (RBAC)
-- Comprehensive audit trails
-- Guarded case-status transitions
-- Input validation and sanitization
+### 🔒 Security
+- JWT access + refresh token pair (Passport strategies), refresh-token rotation via `/auth/refresh`.
+- `RolesGuard` + `@Roles()` decorator on every protected route.
+- Document access is logged per view/download (`DocumentAccessLog`) and restricted to the assigned volunteer + supervisors/admin.
+- Case status transitions are guarded by an explicit state machine (`CASE_STATUS_TRANSITIONS`), not left to the client.
 
 ---
 
 ## 🏗️ Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                         Frontend                            │
-│              React + Vite + Tailwind CSS                    │
-│                    (Role-Based Routing)                     │
-├─────────────────────────────────────────────────────────────┤
-│                    Socket.io Gateway                        │
-│                  (Real-time Notifications)                  │
-├─────────────────────────────────────────────────────────────┤
-│                    REST API (NestJS)                        │
-│          ┌─────────────────────────────────┐                │
-│          │   Auth Module   │  JWT Guard   │                 │
-│          ├─────────────────┼──────────────┤                 │
-│          │   Cases Module  │ Audit Trail │                  │
-│          ├─────────────────┼──────────────┤                 │
-│          │   Documents     │   Notes     │                  │
-│          ├─────────────────┼──────────────┤                 │
-│          │  Appointments   │  Reports    │                  │
-│          ├─────────────────┼──────────────┤                 │
-│          │   AI Proxy      │  Users      │                  │
-│          └─────────────────────────────────┘                │
-├─────────────────────────────────────────────────────────────┤
-│              PostgreSQL (Neon.tech Serverless)              │
-│                      8 Core Entities                        │
-└─────────────────────────────────────────────────────────────┘
+FRONTEND
+React 18 + TypeScript · Vite · Router v6 · Zustand
+        |
+        |  REST (Axios) + Socket.io client
+        v
+BACKEND — NestJS (modular)
+Auth · Users · Cases · Documents · Notes · Appointments
+Admin (reports) · Notifications Gateway · AI Proxy
+(single egress point — no direct frontend -> LLM calls)
+        |
+        +------------------------+
+        v                        v
+PostgreSQL 15                Gemini API
+(TypeORM, synchronize)       gemini-3.1-flash-lite
+10 entities, Neon-compatible SSL
 ```
+
+Every AI feature is called from a backend service (`CasesService`, `DocumentsService`, `AiProxyController`) through `AiProxyService`, which logs each attempt — prompt, output, latency, and whether the fallback fired — to the `ai_interactions` table.
 
 ---
 
 ## 🚀 Quick Start
 
-### 📋 Prerequisites
+### Prerequisites
+- Node.js 20+
+- npm 9+
+- PostgreSQL 15 (local via Docker, or a Neon connection string)
+- Gemini API key (optional — every AI feature has a fallback without it)
+
+### 1. Install
 
 ```bash
-Node.js 20+          # Runtime environment
-npm 9+               # Package manager
-PostgreSQL/Neon.tech # Database (free tier works perfectly)
-Anthropic API Key    # For AI features (optional - fallback works without)
+git clone <this-repo>
+cd LegalAid-main
+
+cd legalaid-backend && npm install
+cd ../legalaid-frontend && npm install
 ```
 
-### ⚡ 5-Minute Setup
+### 2. Configure environment
 
-#### 1. **Clone & Install**
+`legalaid-backend/.env`
 
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/legalaid.git
-cd legalaid
+DATABASE_URL=postgresql://legalaid:legalaid_dev_password@localhost:5432/legalaid?sslmode=disable
+JWT_ACCESS_SECRET=change_this_access_secret
+JWT_REFRESH_SECRET=change_this_refresh_secret
+JWT_ACCESS_EXPIRES=15m
+JWT_REFRESH_EXPIRES=7d
+GEMINI_API_KEY=your_gemini_key_here
+PORT=3000
+FRONTEND_URL=http://localhost:5173
+```
 
-# Backend setup
+`legalaid-frontend/.env`
+
+```bash
+VITE_API_URL=http://localhost:3000/api
+VITE_SOCKET_URL=http://localhost:3000
+```
+
+### 3. Database
+
+`TypeOrmModule.forRoot` runs with `synchronize: true`, so the schema is created automatically from the entities on first boot — no manual migration step needed for local dev. (A baseline migration, `1700000000000-InitialSchema.ts`, is kept in `legalaid-backend/migrations/` for reference/production use.)
+
+```bash
 cd legalaid-backend
-npm install
-
-# Frontend setup
-cd ../legalaid-frontend
-npm install
+docker compose up
 ```
 
-#### 2. **Environment Configuration**
+> ⚠️ Before running this, open `docker-compose.yml` and remove the hardcoded fallback value on `GEMINI_API_KEY` — a real-looking key is currently committed as the default. Rotate that key and pass your own via a `.env` file instead.
+
+### 4. Run
 
 ```bash
-# Backend .env
-cp legalaid-backend/.env.example legalaid-backend/.env
-# Edit with your values:
-# DATABASE_URL=postgresql://user:pass@host/db?sslmode=require
-# ANTHROPIC_API_KEY=your_key_here
-# JWT_ACCESS_SECRET=your_secret_here
-# JWT_REFRESH_SECRET=your_refresh_secret_here
-
-# Frontend .env
-cp legalaid-frontend/.env.example legalaid-frontend/.env
-# VITE_API_URL=http://localhost:3000/api
-# VITE_WS_URL=http://localhost:3000
-```
-
-#### 3. **Database Magic ✨**
-
-The first time you run the backend, TypeORM's `synchronize: true` automatically creates all tables in your Neon database. **Zero manual migrations needed!**
-
-#### 4. **Launch Everything**
-
-```bash
-# Terminal 1: Backend
+# Terminal 1 — backend
 cd legalaid-backend
 npm run start:dev
-# 🚀 Server running on http://localhost:3000
-# 📚 Swagger docs at http://localhost:3000/api/docs
+# http://localhost:3000/api
+# Swagger docs: http://localhost:3000/api/docs
 
-# Terminal 2: Frontend
+# Terminal 2 — frontend
 cd legalaid-frontend
 npm run dev
-# 🎨 Frontend running on http://localhost:5173
+# http://localhost:5173
 
-# Terminal 3: Seed test accounts
+# Terminal 3 — seed test accounts (one-time; skips if users already exist)
 cd legalaid-backend
 npm run seed
-# ✅ Database seeded with test accounts
-```
-
-### 🎯 **Test Accounts**
-
-<div align="center">
-
-## 👥 **User Access Credentials**
-
-</div>
-
-### 🔐 **Administrative & Supervisory Roles**
-
-| Role | Emoji | Email | Password | Access Level |
-|------|-------|-------|----------|--------------|
-| **System Administrator** | 👑 | `admin@legalaid.test` | `password123` | 🔓 Full System Access |
-| **Supervisor** | 👔 | `supervisor@legalaid.test` | `password123` | 📋 Case Management & Oversight |
-
-### 👩‍⚖️ **Volunteer Legal Team**
-
-| Role | Emoji | Email | Password | Case Load |
-|------|-------|-------|----------|-----------|
-| **Senior Volunteer** | ⭐ | `volunteer1@legalaid.test` | `password123` | 15 Active Cases |
-| **Junior Volunteer** | 🌱 | `volunteer2@legalaid.test` | `password123` | 8 Active Cases |
-
-### 🏠 **Citizen Users**
-
-| Role | Emoji | Email | Password | Cases Filed |
-|------|-------|-------|----------|-------------|
-| **Citizen (Premium)** | 🏠 | `citizen1@legalaid.test` | `password123` | 3 Cases |
-| **Citizen (Standard)** | 🏡 | `citizen2@legalaid.test` | `password123` | 1 Case |
-
----
-
-## 📊 **Role-Based Access Matrix**
-
-| Feature | 👑 Admin | 👔 Supervisor | 👩‍⚖️ Volunteer | 🏠 Citizen |
-|---------|----------|---------------|---------------|------------|
-| **View All Cases** | ✅ | ✅ | ❌ | ❌ |
-| **View Assigned Cases** | ✅ | ✅ | ✅ | ❌ |
-| **View Own Cases** | ✅ | ✅ | ✅ | ✅ |
-| **Create Case** | ✅ | ✅ | ✅ | ✅ |
-| **Assign Cases** | ✅ | ✅ | ❌ | ❌ |
-| **Update Case Status** | ✅ | ✅ | ✅ | ❌ |
-| **Upload Documents** | ✅ | ✅ | ✅ | ✅ |
-| **AI Case Triage** | ✅ | ✅ | ✅ | ✅ |
-| **AI Document Summary** | ✅ | ✅ | ✅ | ✅ |
-| **AI Legal Drafting** | ✅ | ✅ | ✅ | ❌ |
-| **Schedule Appointments** | ✅ | ✅ | ✅ | ✅ |
-| **View Reports** | ✅ | ✅ | ❌ | ❌ |
-| **Manage Users** | ✅ | ❌ | ❌ | ❌ |
-| **Audit Trail** | ✅ | ❌ | ❌ | ❌ |
-| **System Configuration** | ✅ | ❌ | ❌ | ❌ |
-
----
-
-## 🎨 **Professional Visual Chart - User Distribution**
-
-```
-📊 User Role Distribution
-═══════════════════════════════════════════════════════════════
-
-👑 Admin
-░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 16.7%
-
-👔 Supervisor
-░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 16.7%
-
-👩‍⚖️ Volunteers
-██████████████████████████████████████████████████████████ 33.3%
-
-🏠 Citizens
-██████████████████████████████████████████████████████████ 33.3%
-
-Total Users: 6
-═══════════════════════════════════════════════════════════════
 ```
 
 ---
 
-## 📈 **Activity Statistics**
+## 🔑 Test Accounts
 
-```
-📊 System Activity Overview
-───────────────────────────────────────────────────────────
-│ Role           │ Active │ Pending │ Completed │ Success │
-├────────────────┼────────┼─────────┼───────────┼─────────┤
-│ Admin          │  100%  │   0%    │   100%    │   99%   │
-│ Supervisor     │   95%  │   5%    │    90%    │   92%   │
-│ Volunteers     │   88%  │  12%    │    85%    │   89%   │
-│ Citizens       │   75%  │  25%    │    60%    │   78%   │
-└────────────────┴────────┴─────────┴───────────┴─────────┘
-```
+Seeded by `src/seed.ts` — password is `password123` for all of them:
+
+| Name | Role | Email |
+|------|------|-------|
+| Kulsoom Admin | 👑 admin | `kulsoom@legalaid.test` |
+| Bilal Supervisor | 👔 supervisor | `bilal@legalaid.test` |
+| Sara Volunteer | ⚖️ volunteer (reports to Bilal) | `sara@legalaid.test` |
+| Hamza Volunteer | ⚖️ volunteer (reports to Bilal) | `hamza@legalaid.test` |
+| Fatima Citizen | 🏠 citizen | `fatima@legalaid.test` |
+| Usman Citizen | 🏠 citizen | `usman@legalaid.test` |
+
+> The seed script only creates **users** — no demo cases/documents/appointments are pre-populated, so caseloads start empty until you create cases through the app.
+> Note: `test/app.e2e-spec.ts` currently logs in as `saleena@legalaid.test` for the volunteer — update that to `sara@legalaid.test` so the e2e suite matches the seed.
 
 ---
 
-## 🎯 **Quick Login Guide**
+## 👥 Role Access Matrix
 
-### ⚡ **One-Click Login Commands**
+Derived directly from the `@Roles()` guards in each controller:
 
-```bash
-# Copy and paste these for quick access
-
-# 👑 Admin Login
-http://localhost:5173/login?email=admin@legalaid.test&password=password123
-
-# 👔 Supervisor Login
-http://localhost:5173/login?email=supervisor@legalaid.test&password=password123
-
-# 👩‍⚖️ Volunteer 1 Login
-http://localhost:5173/login?email=volunteer1@legalaid.test&password=password123
-
-# 👩‍⚖️ Volunteer 2 Login
-http://localhost:5173/login?email=volunteer2@legalaid.test&password=password123
-
-# 🏠 Citizen 1 Login
-http://localhost:5173/login?email=citizen1@legalaid.test&password=password123
-
-# 🏠 Citizen 2 Login
-http://localhost:5173/login?email=citizen2@legalaid.test&password=password123
-```
+| Action | Admin | Supervisor | Volunteer | Citizen |
+|---|:---:|:---:|:---:|:---:|
+| Create case | ❌ | ❌ | ❌ | ✅ |
+| Delete case | ✅ | ❌ | ❌ | ✅ (own) |
+| View cases (scoped to role) | ✅ all | ✅ all | assigned only | own only |
+| Update case status | ✅ | ✅ | ✅ | ❌ |
+| Assign / reassign case | ✅ | ✅ | ❌ | ❌ |
+| Set case outcome | ✅ | ✅ | ✅ | ❌ |
+| Upload / view documents | ✅ | ✅ | ✅ | ✅ (own case) |
+| View document access logs | ✅ | ✅ | ❌ | ❌ |
+| Write / approve case notes | ❌ | view only | ✅ | ❌ |
+| Book appointment | — | — | — | ✅ |
+| Set weekly availability | — | — | ✅ | — |
+| Set volunteer capacity | ✅ | ✅ | ❌ | ❌ |
+| Predict-outcome (AI, bonus) | ✅ | ✅ | ✅ | ❌ (never shown) |
+| Reporting dashboard (8 endpoints) | ✅ | ❌ | ❌ | ❌ |
+| Invite / edit / deactivate users | ✅ | ❌ | ❌ | ❌ |
 
 ---
 
 ## 🤖 AI Features
 
-### 1. **Smart Case Triage** 🎯
-- **Input:** Case description and category
-- **Output:** Domain classification + urgency score (1-10)
-- **Fallback:** ML-based keyword analysis
+All four features are routed through `AiProxyService`, which calls the Gemini `generateContent` endpoint and **always** logs the interaction (success or fallback) to `ai_interactions`.
 
-### 2. **Document Intelligence** 📄
-- **Input:** Uploaded document (PDF, DOCX, TXT)
-- **Output:** Summary, key facts, and legal issues
-- **Fallback:** Regex-based key phrase extraction
+### 1. Legal Query Classifier & Router
+- **Trigger:** `PATCH /cases/:id/classify`, or automatically on submission.
+- **Output:** `domain`, `urgency`, one-sentence `rationale` — written back onto the `Case` row.
+- **Escalation:** a `critical`/`high` urgency result fires `notifyHighUrgencyCase`, broadcast to the `role:supervisor` socket room.
+- **Fallback:** citizen is shown a manual domain dropdown (`ManualClassifyDto`).
 
-### 3. **AI Legal Drafting** ✍️
-- **Input:** Case details and requirements
-- **Output:** Draft legal letter or response
-- **Fallback:** Template-based generation
+### 2. Document Summariser
+- **Trigger:** after a document upload finishes processing.
+- **Output:** 2–4 sentence plain-language `summary`, `urgent` boolean, `urgentReason`.
+- **Fallback:** `summaryPending` stays true; volunteer reviews the raw document manually.
 
-### 4. **Smart Suggestions** 💡
-- **Input:** Case context and user actions
-- **Output:** Recommended next steps and resources
-- **Fallback:** Rule-based recommendations
+### 3. Advisory Letter Draft Assistant
+- **Trigger:** volunteer submits rough notes on a case.
+- **Output:** full formal letter text, stored as a `CaseNote` with `isAiDraft: true` until the volunteer explicitly `approve`s it.
+- **Fallback:** volunteer writes and sends the letter manually — the AI path is never mandatory.
 
-### 🔄 **Graceful Fallback Pattern**
+### 4. Outcome Predictor — bonus
+- **Trigger:** `POST /ai/predict-outcome`, called on demand from the frontend badge.
+- **Output:** `predictedOutcome`, `confidence`, one-sentence advisory `rationale`.
+- **Visibility:** volunteer/supervisor/admin only — never returned to the citizen.
+
+The shared call pattern in `AiProxyService` (simplified):
 
 ```typescript
-// Every AI feature follows this pattern:
+if (!apiKey) return { success: false, fallback: true, error: 'Missing API Key' };
 try {
-  const result = await callClaudeAPI(prompt);
-  await logAISuccess(result, 'feature_name');
-  return result;
-} catch (error) {
-  await logAIFallback('feature_name', error);
-  return getFallbackResult();
+  const raw = await callGemini(prompt);
+  await logInteraction(feature, prompt, raw, /*fallbackFired*/ false);
+  return { success: true, data: parse(raw) };
+} catch (err) {
+  await logInteraction(feature, prompt, null, /*fallbackFired*/ true, err.message);
+  return { success: false, fallback: true, error: err.message };
 }
 ```
-
-**All AI interactions are logged** — perfect for your Deliverable 4 report!
 
 ---
 
 ## 📊 Database Schema
 
-### **8 Core Entities**
+10 TypeORM entities (`legalaid-backend/src/**/entities`):
 
-```sql
-┌──────────────────────────────────────────────────────┐
-│                     User                             │
-│  id, email, role, password_hash, created_at          │
-└──────────────────────────────────────────────────────┘
-         │
-         ├─────────────────┬─────────────────┐
-         ▼                 ▼                 ▼
-┌─────────────────┐ ┌───────────────┐ ┌─────────────────┐
-│     Case        │ │   Document    │ │   Appointment   │
-│  id, title,     │ │  id, case_id, │ │  id, case_id,   │
-│  description,   │ │  filename,    │ │  scheduled_at,  │
-│  status,        │ │  file_path,   │ │  status, notes  │
-│  domain,        │ │  summary,     │ │                 │
-│  urgency        │ │  uploaded_at  │ │                 │
-└─────────────────┘ └───────────────┘ └─────────────────┘
-         │
-         ├─────────────────┬─────────────────┐
-         ▼                 ▼                 ▼
-┌─────────────────┐ ┌───────────────┐ ┌─────────────────┐
-│     Note        │ │  CaseHistory  │ │ Notification    │
-│  id, case_id,   │ │  id, case_id, │ │  id, user_id,   │
-│  content,       │ │  field,       │ │  message,       │
-│  created_by,    │ │  old_value,   │ │  read,          │
-│  created_at     │ │  new_value,   │ │  created_at     │
-└─────────────────┘ └───────────────┘ └─────────────────┘
 ```
+User
+ ├── Case (citizen / volunteer)
+ │     ├── CaseStatusLog   (status-change audit trail)
+ │     ├── Document ────── DocumentAccessLog (view/download log)
+ │     ├── CaseNote        (isAiDraft, approved)
+ │     └── Appointment     (cascades on case delete)
+ ├── Availability   (volunteer weekly slots)
+ ├── Notification   (per-user, jsonb meta)
+ └── AiInteraction  (feature, prompt, output, fallbackFired, latencyMs)
+```
+
+Key enums: `CaseDomain` (housing/family/employment/immigration/consumer/other), `CaseUrgency` (low/medium/high/critical), `CaseStatus` (submitted → triaged → assigned → in_progress ⇄ awaiting_citizen → resolved → closed), `CaseOutcome` (won/settled/referred/withdrawn/unresolved).
 
 ---
 
 ## 🛠️ Tech Stack
 
-### **Backend**
-| Technology | Purpose |
-|------------|---------|
-| [NestJS](https://nestjs.com/) | Progressive Node.js framework |
-| [TypeORM](https://typeorm.io/) | ORM with active record pattern |
-| [PostgreSQL](https://www.postgresql.org/) | Primary database (Neon.tech) |
-| [JWT](https://jwt.io/) | Authentication & authorization |
-| [Socket.io](https://socket.io/) | Real-time notifications |
-| [Anthropic Claude](https://www.anthropic.com/) | AI features |
-| [Swagger](https://swagger.io/) | API documentation |
-| [Jest](https://jestjs.io/) | Testing framework |
+### Backend
+| Technology | Role |
+|---|---|
+| NestJS + TypeScript | modular REST + WebSocket API |
+| TypeORM | entities, `synchronize: true` for dev, migration file kept for prod |
+| PostgreSQL 15 | primary datastore (Neon-compatible, SSL) |
+| Passport + JWT | access/refresh auth |
+| Socket.io (`@nestjs/websockets`) | real-time notifications, per-user + per-role rooms |
+| `@nestjs/schedule` | appointment reminder cron (24h / 1h) |
+| Swagger (`@nestjs/swagger`) | auto-generated docs at `/api/docs` |
+| Multer | document upload, 10 MB limit |
+| Gemini API (`gemini-3.1-flash-lite`) | all 4 AI features, via `AiProxyService` |
 
-### **Frontend**
-| Technology | Purpose |
-|------------|---------|
-| [React 18](https://reactjs.org/) | UI library |
-| [Vite](https://vitejs.dev/) | Build tool & dev server |
-| [Tailwind CSS](https://tailwindcss.com/) | Utility-first CSS |
-| [React Router](https://reactrouter.com/) | Navigation & routing |
-| [Socket.io Client](https://socket.io/) | Real-time updates |
-| [Axios](https://axios-http.com/) | HTTP client |
-| [React Query](https://tanstack.com/query) | Data fetching & caching |
+### Frontend
+| Technology | Role |
+|---|---|
+| React 18 + TypeScript | UI |
+| Vite | dev server / build |
+| React Router v6 | routing, `ProtectedRoute` + `RoleRoute` |
+| Zustand | case & notification stores |
+| Axios | REST client with silent-refresh interceptor |
+| Socket.io-client | live updates (`useSocket` hook) |
+| Recharts | 5 admin analytics charts |
+| Tailwind CSS | custom "civic navy / parchment / brass" theme — see `tailwind.config.js` |
+| lucide-react, date-fns, clsx | icons / dates / class utils |
 
 ---
 
 ## 📁 Project Structure
 
 ```
-legalaid/
-├── legalaid-backend/                # NestJS Backend
-│   ├── src/
-│   │   ├── auth/                    # Authentication module
-│   │   │   ├── strategies/          # JWT strategies
-│   │   │   └── guards/              # Auth guards
-│   │   ├── cases/                   # Case management
-│   │   │   ├── entities/            # Case entity
-│   │   │   ├── dto/                 # Data transfer objects
-│   │   │   └── case-history/        # Audit trail
-│   │   ├── documents/               # Document handling
-│   │   │   ├── upload/              # File upload logic
-│   │   │   └── ai-summary/          # AI summarization
-│   │   ├── users/                   # User management
-│   │   ├── notes/                   # Notes system
-│   │   ├── appointments/            # Scheduling
-│   │   ├── notifications/           # Socket.io gateway
-│   │   ├── ai-proxy/                # AI integration
-│   │   │   ├── claude/              # Claude API wrapper
-│   │   │   └── fallback/            # Graceful degradation
-│   │   ├── reports/                 # Admin reporting
-│   │   └── common/                  # Shared utilities
-│   ├── test/                        # Unit & e2e tests
-│   ├── .env.example
-│   ├── package.json
-│   ├── tsconfig.json
-│   └── README.md
-│
-├── legalaid-frontend/               # React + Vite Frontend
-│   ├── src/
-│   │   ├── components/              # Reusable components
-│   │   │   ├── common/              # Shared components
-│   │   │   └── layout/              # Layout components
-│   │   ├── pages/                   # Page components
-│   │   │   ├── admin/               # Admin dashboard
-│   │   │   ├── supervisor/          # Supervisor dashboard
-│   │   │   ├── volunteer/           # Volunteer dashboard
-│   │   │   └── citizen/             # Citizen dashboard
-│   │   ├── hooks/                   # Custom React hooks
-│   │   ├── context/                 # React context providers
-│   │   ├── services/                # API services
-│   │   ├── utils/                   # Utility functions
-│   │   ├── styles/                  # Global styles
-│   │   └── App.tsx
-│   ├── public/                      # Static assets
-│   ├── .env.example
-│   ├── package.json
-│   ├── vite.config.ts
-│   └── README.md
-│
-├── docs/
-│   ├── api/                         # API documentation
-│   ├── database/                    # DB schema diagrams
-│   └── user-guide/                  # User documentation
-│
-└── README.md                        # This file
+LegalAid-main/
+  legalaid-backend/
+    src/
+      auth/            JWT strategies, guards, decorators
+      users/           includes capacity management
+      cases/           entity, enums + state machine, service, controller
+      documents/       upload, access logs
+      notes/           case notes / AI letter drafts
+      appointments/    booking, availability, reminder scheduler
+      notifications/   Socket.io gateway
+      ai-proxy/        Gemini integration + prompt templates
+      admin/           8 reporting endpoints + user management
+      seed.ts
+    migrations/
+    test/              Jest + Supertest e2e
+    docker-compose.yml
+
+  legalaid-frontend/
+    src/
+      api/             axios instance, auth/cases calls
+      components/
+        ai/            AIClassifierBanner, DocumentSummaryCard, LetterDraftEditor, OutcomePredictionBadge
+        case/          CaseCard, CaseDetail (with outcome entry), StatusBadge, StatusTimeline
+        charts/        Volume, Outcome, Resolution, Utilisation, StatusBreakdown
+        layout/        RoleLayout, Sidebar, Topbar
+      pages/
+        admin/ · supervisor/ (with capacity panel) · volunteer/ · citizen/ · auth/
+      context/, hooks/, routes/, store/, types/
+      App.tsx
 ```
 
 ---
 
 ## 🎯 Demo Scenarios
 
-### **Scenario 1: Citizen Journey**
-1. **Login** as `citizen1@legalaid.test`
-2. **Create Case** → Watch AI triage in action
-3. **Upload Document** → See AI summary generated
-4. **Track Progress** → Real-time status updates
+**1 — Citizen journey:** log in as `fatima@legalaid.test` → submit a new case → watch AI classification set the domain/urgency → upload a document → see the AI summary appear → track status on the live timeline.
 
-### **Scenario 2: Volunteer Workflow**
-1. **Login** as `volunteer1@legalaid.test`
-2. **View Caseload** → See assigned cases
-3. **Update Case** → Try invalid status transition (show guard)
-4. **Generate Letter** → Use AI drafting feature
-5. **Approve & Send** → Complete the workflow
+**2 — Volunteer workflow:** log in as `sara@legalaid.test` → open an assigned case → try an invalid status jump (guard blocks it) → write rough notes → generate the AI letter draft → review and approve it → set the case outcome once resolved.
 
-### **Scenario 3: Admin Oversight**
-1. **Login** as `admin@legalaid.test`
-2. **View Reports** → Analytics dashboard
-3. **Invite User** → Create new volunteer
-4. **Audit Trail** → View system activity
+**3 — Supervisor capacity check:** log in as `bilal@legalaid.test` → open Caseload Overview → adjust a volunteer's max active cases → see the over-capacity flag update live.
 
-### **Scenario 4: Real-Time Collaboration**
-1. Open two browsers
-2. Citizen creates a case → Volunteer sees notification
-3. Volunteer updates status → Citizen gets instant update
-4. Supervisor assigns case → All parties notified
+**4 — Real-time collaboration:** open a citizen session and a volunteer session side by side → citizen uploads a document → volunteer's `role:volunteer` room gets `document:uploaded` instantly.
 
-### **Scenario 5: AI Fallback**
-1. Remove `ANTHROPIC_API_KEY` from `.env`
-2. Restart backend
-3. **All AI features still work** with manual fallbacks
-4. See fallback logs in Swagger/DB
+**5 — AI fallback:** unset `GEMINI_API_KEY` and restart the backend → classification, summary, and letter-drafting all still work through their manual fallback paths → check `ai_interactions` for `fallbackFired: true` rows.
 
----
-
-## 🎬 **Demo Presentation Flow with Animations**
-
-### **Role Transition Animation (CSS)**
-```css
-@keyframes roleTransition {
-    0% { transform: translateX(-100%); opacity: 0; }
-    100% { transform: translateX(0); opacity: 1; }
-}
-
-.role-card {
-    animation: roleTransition 0.5s ease-out;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.role-card:hover {
-    transform: translateY(-8px) scale(1.02);
-    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-}
-```
-
-### **Interactive Role Cards (HTML/JS)**
-```html
-<!DOCTYPE html>
-<html>
-<head>
-    <style>
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            padding: 20px;
-        }
-        
-        .role-card {
-            background: white;
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .role-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #4F46E5, #7C3AED, #EC4899);
-            transform: scaleX(0);
-            transition: transform 0.3s ease;
-        }
-        
-        .role-card:hover::before {
-            transform: scaleX(1);
-        }
-        
-        .role-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-        }
-        
-        .role-emoji {
-            font-size: 3rem;
-            display: block;
-            margin-bottom: 12px;
-        }
-        
-        .role-name {
-            font-size: 1.25rem;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-        
-        .role-email {
-            color: #6B7280;
-            font-size: 0.875rem;
-            margin-bottom: 12px;
-        }
-        
-        .role-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 500;
-        }
-        
-        .badge-admin { background: #FEE2E2; color: #991B1B; }
-        .badge-supervisor { background: #DBEAFE; color: #1E40AF; }
-        .badge-volunteer { background: #D1FAE5; color: #065F46; }
-        .badge-citizen { background: #FEF3C7; color: #92400E; }
-        
-        @media (max-width: 768px) {
-            .dashboard-grid {
-                grid-template-columns: 1fr;
-                padding: 10px;
-            }
-            
-            .role-card {
-                padding: 16px;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="dashboard-grid">
-        <!-- Admin Card -->
-        <div class="role-card">
-            <span class="role-emoji">👑</span>
-            <div class="role-name">System Administrator</div>
-            <div class="role-email">admin@legalaid.test</div>
-            <span class="role-badge badge-admin">🔑 Full Access</span>
-        </div>
-        
-        <!-- Supervisor Card -->
-        <div class="role-card">
-            <span class="role-emoji">👔</span>
-            <div class="role-name">Supervisor</div>
-            <div class="role-email">supervisor@legalaid.test</div>
-            <span class="role-badge badge-supervisor">📋 Oversight</span>
-        </div>
-        
-        <!-- Volunteer Cards -->
-        <div class="role-card">
-            <span class="role-emoji">⭐</span>
-            <div class="role-name">Senior Volunteer</div>
-            <div class="role-email">volunteer1@legalaid.test</div>
-            <span class="role-badge badge-volunteer">⚖️ 15 Cases</span>
-        </div>
-        
-        <div class="role-card">
-            <span class="role-emoji">🌱</span>
-            <div class="role-name">Junior Volunteer</div>
-            <div class="role-email">volunteer2@legalaid.test</div>
-            <span class="role-badge badge-volunteer">📁 8 Cases</span>
-        </div>
-        
-        <!-- Citizen Cards -->
-        <div class="role-card">
-            <span class="role-emoji">🏠</span>
-            <div class="role-name">Citizen (Premium)</div>
-            <div class="role-email">citizen1@legalaid.test</div>
-            <span class="role-badge badge-citizen">📄 3 Cases</span>
-        </div>
-        
-        <div class="role-card">
-            <span class="role-emoji">🏡</span>
-            <div class="role-name">Citizen (Standard)</div>
-            <div class="role-email">citizen2@legalaid.test</div>
-            <span class="role-badge badge-citizen">📄 1 Case</span>
-        </div>
-    </div>
-</body>
-</html>
-```
-
----
-
-## 📈 Performance
-
-| Metric | Value |
-|--------|-------|
-| 🚀 Cold Start | < 2 seconds |
-| 📄 Page Load | < 1 second |
-| 🤖 AI Response | 2-5 seconds (with fallback < 500ms) |
-| 🔄 Real-time Updates | < 100ms latency |
-| 💾 Database Queries | < 50ms average |
-
-### **Optimization Techniques**
-- ✅ Connection pooling with Neon.tech
-- ✅ Query optimization with indexes
-- ✅ React lazy loading for routes
-- ✅ Image optimization with Vite
-- ✅ API response caching
+**6 — Admin oversight:** log in as `kulsoom@legalaid.test` → Reports page (volume by domain/volunteer/month, resolution time, outcomes, utilisation) → invite a new volunteer → deactivate a user.
 
 ---
 
