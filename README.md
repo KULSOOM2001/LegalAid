@@ -180,6 +180,7 @@ Seeded by `src/seed.ts` — password is `password123` for all of them:
 ## 👥 Role Access Matrix
 
 Derived directly from the `@Roles()` guards in each controller:
+
 ✅ allowed · ❌ explicitly restricted by role guard · — not applicable to this role
 
 | Action | Admin | Supervisor | Volunteer | Citizen |
