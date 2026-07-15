@@ -30,7 +30,6 @@
 - [🛠️ Tech Stack](#️-tech-stack)
 - [📁 Project Structure](#-project-structure)
 - [🎯 Demo Scenarios](#-demo-scenarios)
-- [⚠️ Known Issues](#️-known-issues)
 
 ---
 
