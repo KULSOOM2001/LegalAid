@@ -348,7 +348,7 @@ LegalAid-main/
 
 **[⬆ Back to Top](#legalaid--ai-powered-legal-case-management-system)**
 
-[![Star on GitHub](https://img.shields.io/github/stars/yourusername/legalaid?style=social)](https://github.com/yourusername/legalaid)
+[![Star on GitHub](https://img.shields.io/github/stars/yourusername/legalaid?style=social)](https://github.com/KULSOOM2001/LegalAid)]
 
 </div>
 
